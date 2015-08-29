@@ -292,12 +292,15 @@ foreach( $aGroups as $sGroupName ) {
 // We don't need KU Regis now. Log out.
 regis_logout( $sCookie );
 
+// Retrieve unselected groups in the course. These groups will be untouched.
+$aUnlistedGroupIDs = get_unlist_groups( $aGroups );
+
 // Perform enrollment level action
 if ($xManualEnrollInstance != null && ($nRoleID > 0 || $sDropAction != 'nothing')) {
-    enroll_action($aStdIDList, $xManualEnrollInstance, $nRoleID, $sDropAction);
+    enroll_action($aStdIDList, $aUnlistedGroupIDs, $xManualEnrollInstance, $nRoleID, $sDropAction);
 }
 
-group_action($aStdIDGroupList, $bAutoGroup, $bAutoRevoke);
+group_action($aStdIDGroupList, $aUnlistedGroupIDs, $bAutoGroup, $bAutoRevoke);
 
 // Typically you finish up by redirecting to somewhere where the user
 // can see what they did.

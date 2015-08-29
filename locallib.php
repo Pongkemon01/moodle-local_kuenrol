@@ -286,7 +286,6 @@ function regis_get_sec_list( $courseid, $year, $semester, $cookies )
 	/* If http request fail, return empty group array */
 	
 	if( false === $result ) {
-		file_put_contents('/tmp/moodletxt2',  "Result fail\n");
 		return( array() );
 	}
 	
@@ -563,16 +562,53 @@ function usernamelist_to_useridlist( $aUsers ) {
 /*------------------------------------------------------------*/
 
 /**
+ * Retrieve the names of unselected groups in the course. All students belong to
+ * these groups will be untouched.
+ * @param array $aGroups in the form of Lect:Lab without 'S' prefix (Becareful)
+ * @return array of id of the groups that are not in the parameter.
+ */
+function get_unlist_groups( $aGroups ) {
+    global $COURSE;
+
+	// Generate group name with 'S' prefix
+	$aListedGroups = array();
+	foreach( $aGroups as $sGroupName ) {
+		$aListedGroups[] = 'S' . $sGroupName;
+	}
+	
+    $xCourseContext = context_course::instance( $COURSE->id );
+
+	// Fristly, we get all groups in the course and mark them as unlisted.
+	// Then, we substract two arrays
+	
+	// Get all groups in the course
+	$aGroupObjsInCourse = groups_get_all_groups( $COURSE->id );
+	// Generate array of group ids
+	$aUnlistedGroupIDs = array();
+	foreach( $aGroupObjsInCourse as $xGroupObj ) {
+		if( ! in_array( $xGroupObj->name, $aListedGroups ) ) {
+			$aUnlistedGroupIDs[] = $xGroupObj->id;
+		}
+	}
+	
+	// return subtracted arrays
+	
+	return( $aUnlistedGroupIDs );
+}
+/*------------------------------------------------------------*/
+
+/**
  * Perform enrollment action (enrol new users and suspend/withdraw missing users).
  * @param array $aUers - The array of username or idnumber. The 'idnumber' is recommended
  *                       because it is what KU Regis provided and we don't need to worry
  *                       about the prefix letter 'b' or 'g'.
+ * @param array $aUnlistedGroupIDs - The array of group ids which are excluded from processing.
  * @param class $xManualEnrolInstance - The instance of 'manual' enrollment plugin in class-context.
  * @param integer $nRoleId
  * @param string $sMissingAct - action for users missing from the imported data.
  * @return none.
  */
-function enroll_action( $aUsers, $xManualEnrolInstance, $nRoleId, $sMissingAct ) {
+function enroll_action( $aUsers, $aUnlistedGroupIDs,  $xManualEnrolInstance, $nRoleId, $sMissingAct ) {
     global $COURSE;
 
     $xCourseContext = context_course::instance( $COURSE->id );
@@ -592,6 +628,19 @@ function enroll_action( $aUsers, $xManualEnrolInstance, $nRoleId, $sMissingAct )
     if( $sMissingAct != 'nothing' ) {
         $xEnrolUsers = get_enrolled_users( $xCourseContext );
         foreach( $xEnrolUsers as $xEnrolPerson ) {
+        	// If the interesting student is member of an unselected group. Then skip.
+        	$bInUnlisted = false;
+        	foreach( $aUnlistedGroupIDs as $nGroupID ) {
+        		if( groups_is_member( $nGroupID, $xEnrolPerson->id ) ) {
+        			$bInUnlisted = true;
+        			break;
+        		}
+        	}
+        	if( $bInUnlisted ) {
+        		// Skip users in unlisted groups
+        		continue;
+        	}
+        	
         	// Process suspension or withdrawing only to students
             if( !in_array( $xEnrolPerson->id, $nUsers ) && is_student( $xEnrolPerson->id ) ) {
                 if( $sMissingAct == 'suspend' ) {
@@ -610,11 +659,12 @@ function enroll_action( $aUsers, $xManualEnrolInstance, $nRoleId, $sMissingAct )
  * @param array $aUserGroups in the form of ( username/idnumber => array( group_names_list ) )
  *                       The 'idnumber' is recommended because it is what KU Regis provided
  *                       and we don't need to worryabout the prefix letter 'b' or 'g'.
+ * @param array $aUnlistedGroupIDs - The array of group ids which are excluded from processing.
  * @param integer $autogroupcreate - Whether new group should be created if required?
  * @param integer $autogroupwithdraw - Whether users should be withdrawn from the group not specified in imported data?
  * @return none.
  */
-function group_action( $aUserGroups, $bAutoGroupCreate, $bAutoGroupWithdraw ) {
+function group_action( $aUserGroups, $aUnlistedGroupIDs, $bAutoGroupCreate, $bAutoGroupWithdraw ) {
     global $COURSE;
 
     $xCourseContext = context_course::instance( $COURSE->id );
@@ -669,7 +719,8 @@ function group_action( $aUserGroups, $bAutoGroupCreate, $bAutoGroupWithdraw ) {
 
             // Iterate
             foreach( $axEnrolledGroups as $xEnrolledGroup ) {
-                if( !in_array( $xEnrolledGroup->name, $aUserGroups ) ) {
+                if( ( !in_array( $xEnrolledGroup->id, $aUnlistedGroupIDs) ) && 
+                	( !in_array( $xEnrolledGroup->name, $aUserGroups ) ) ) {
                     groups_remove_member( $xEnrolledGroup->id, $nUid );
                 }
             }
