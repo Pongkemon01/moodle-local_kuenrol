@@ -178,13 +178,6 @@ class local_kuenrol_form2 extends moodleform {
 	        $xForm->setDefault( 'nRoleID', $this->_customdata['default_roleid'] );
 	    }
 
-		
-		$xForm->addElement( 'advcheckbox', 'bAutoGroup', get_string( 'f2_distribute', self::$pluginname ),
-							'', array( 'group' => 1 ), array( false, true ) );
-
-		$xForm->addElement( 'advcheckbox', 'bAutoRevoke', get_string( 'f2_revoke', self::$pluginname ),
-							'', array( 'group' => 2 ), array( false, true ) );
-		
 		$aDropAction = array (
 			'nothing' => get_string( 'f2_missing_none', self::$pluginname ),
 			'suspend' => get_string( 'f2_missing_susp', self::$pluginname ),
@@ -195,6 +188,12 @@ class local_kuenrol_form2 extends moodleform {
 		if( !( $this->_customdata['candrop'] ) ) {
 			$xForm->updateElementAttr( 'sDropAction', 'disabled' );
 		}
+				
+		$xForm->addElement( 'advcheckbox', 'bAutoGroup', get_string( 'f2_distribute', self::$pluginname ),
+							'', array( 'group' => 1 ), array( false, true ) );
+
+		$xForm->addElement( 'advcheckbox', 'bAutoRevoke', get_string( 'f2_revoke', self::$pluginname ),
+							'', array( 'group' => 2 ), array( false, true ) );
 		
 		// hidden fields
         $xForm->addElement('hidden', 'id');

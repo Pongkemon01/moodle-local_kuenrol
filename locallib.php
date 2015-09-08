@@ -134,6 +134,13 @@ function iso8859_11toUTF8( $string )
 }
 /*------------------------------------------------------------*/
 
+/* Generate log entry */
+function ku_log( $string )
+{
+        file_put_contents("/tmp/Kuenrol.log",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
+}
+/*------------------------------------------------------------*/
+
 function csv_to_array( $string )
 {
 	$lines = explode(PHP_EOL, $string);
@@ -511,6 +518,70 @@ function is_student( $nUserId ) {
 /*------------------------------------------------------------*/
 
 /**
+ * Returns a Nontri account of the student with the providing ID
+ *
+ * @param string $sStudentID - A valid student ID for KU in the form of 
+ *			YYCLMMRRRR where each character should be a digit.
+ * @return string|bool - A nontri account of the parameter is valid. false otherwise.
+ **/
+function ku_gen_username( $sStudentID ) {
+	/* The 4th digit from the left of the student ID can be used to identify 
+	student level. Letter '0' - '3' means undergraduate, letter '4' - '6' means
+	master level, and letter '7' - '9' means doctoral level. */
+	
+	// Check student ID format
+	if( strlen( $sStudentID ) != 10 ) {
+		return false;
+	}
+	if( !ctype_digit( $sStudentID ) ) {
+		return false;
+	}
+	
+	$nKeyDigit = intval( $sStudentID[3] ); // Get the key digit
+	if( $nKeyDigit <= 3 ) {
+		return( 'b' . $sStudentID );
+	} else {
+		return( 'g' . $sStudentID );
+	}
+}
+/*------------------------------------------------------------*/
+
+/**
+ * Returns a subset of users
+ *
+ * @global object
+ * @uses DEBUG_DEVELOPER
+ * @uses SQL_PARAMS_NAMED
+ * @param bool $get If false then only a count of the records is returned
+ * @param string $search A simple string to search for
+ * @param string $fields A comma separated list of fields to be returned from the chosen table.
+ * @param string $sort A SQL snippet for the sorting criteria to use
+ * @return array|int|bool  {@link $USER} records unless get is false in which case the integer count of the records found is returned.
+ *                        False is returned if an error is encountered.
+ */
+function ku_get_users($get=true, $search='', $fields='*', $sort='username ASC' ) {
+	global $DB, $CFG;
+ 
+	$select = " id <> :guestid AND deleted = 0";
+	$params = array('guestid'=>$CFG->siteguest);
+   
+	if (!empty($search)){
+		$search = trim($search);
+		$select .= " AND (".$DB->sql_like('idnumber', ':search1', false)." OR ".$DB->sql_like('email', ':search2', false)." OR ".$DB->sql_like('username', ':search3', false).")";
+		$params['search1'] = "%$search%";
+		$params['search2'] = "%$search%";
+		$params['search3'] = "%$search";
+	}
+
+	if ($get) {
+		return $DB->get_records_select('user', $select, $params, $sort, $fields, '', '2');
+	} else {
+		return $DB->count_records_select('user', $select, $params);
+	}
+}
+/*------------------------------------------------------------*/
+
+/**
  * Translate a username into a coresponding userid by looking up from the database.
  *
  * @param string $sUserName
@@ -526,14 +597,18 @@ function username_to_userid( $sUserName ) {
 	   Therefore, the pattern covers all possible Nontri accounts with only
 	   student ID as the key. Therefore, $sUserName canbe a full Nontri account
 	   or a student ID. */
-	$xUserRecords = get_users( true, $sUserName, false, null, 'firstname', '', '', '', '1' );
+	$xUserRecords = ku_get_users( true, $sUserName, 'id, username' );
 		
 	// If username does not exists then return false
 	if( $xUserRecords === false ) {
 		return false;
 	} else {
-		$xUserRecords = array_values( $xUserRecords );
-		return( $xUserRecords[0]->id );
+		$xUserRecordData = array_values( $xUserRecords );
+		if( count( $xUserRecordData ) < 1 ) {
+			return false;
+		} else {
+			return( $xUserRecordData[0]->id );
+		}
 	}
 }	
 /*------------------------------------------------------------*/
@@ -551,7 +626,7 @@ function usernamelist_to_useridlist( $aUsers ) {
 		$nUid = username_to_userid( $sUserName );
 		
 		// If username does not exists then continue to the next user
-		if( $nUid === false ) {
+		if( false === $nUid ) {
 			continue;
 		}
 		$nUsers[] = $nUid;
@@ -627,22 +702,31 @@ function enroll_action( $aUsers, $aUnlistedGroupIDs,  $xManualEnrolInstance, $nR
     // Withdraw/Suspend unlisted users
     if( $sMissingAct != 'nothing' ) {
         $xEnrolUsers = get_enrolled_users( $xCourseContext );
-        foreach( $xEnrolUsers as $xEnrolPerson ) {
-        	// If the interesting student is member of an unselected group. Then skip.
-        	$bInUnlisted = false;
-        	foreach( $aUnlistedGroupIDs as $nGroupID ) {
-        		if( groups_is_member( $nGroupID, $xEnrolPerson->id ) ) {
-        			$bInUnlisted = true;
-        			break;
+
+        // Build userid of the members of unlisted group
+        $anExcludedUserID = array();
+        foreach( $aUnlistedGroupIDs as $nUnlistedID ) {
+        	$axGroupMembers = groups_get_members( $nUnlistedID, 'u.id' );
+        	foreach( $axGroupMembers as $xGroupMember ) {
+        		if( !in_array( $xGroupMember->id, $anExcludedUserID ) ) {
+        			$anExcludedUserID[] = $xGroupMember->id;
         		}
         	}
-        	if( $bInUnlisted ) {
-        		// Skip users in unlisted groups
+        }
+        
+        foreach( $xEnrolUsers as $xEnrolPerson ) {
+			// If the interesting student is not a student. Then skip
+			if( ! is_student( $xEnrolPerson->id ) ) {
+				continue;
+			}
+
+        	// If the interesting student is member of an unselected group. Then skip.
+        	if( in_array( $xEnrolPerson->id, $anExcludedUserID ) ) {
         		continue;
         	}
         	
         	// Process suspension or withdrawing only to students
-            if( !in_array( $xEnrolPerson->id, $nUsers ) && is_student( $xEnrolPerson->id ) ) {
+            if( !in_array( $xEnrolPerson->id, $nUsers ) ) {
                 if( $sMissingAct == 'suspend' ) {
                     $xSystemManualEnrol->update_user_enrol( $xManualEnrolInstance, $xEnrolPerson->id, 1 );
                 } else {

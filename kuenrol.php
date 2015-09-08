@@ -29,10 +29,6 @@ require_once('kuenrol_form.php');
 
 /********************* Step 1: Preprocessing **********************/
 
-// Want this for subsequent print_error() calls
-$sCourseURL = new moodle_url("{$CFG->wwwroot}/course/view.php", array('id' => $COURSE->id));
-$sGroupsURL = new moodle_url("{$CFG->wwwroot}/group/index.php", array('id' => $COURSE->id));
-
 // Ensure user privillege
 // Fetch the course id from query string
 $course_id = required_param('id', PARAM_INT);
@@ -41,6 +37,11 @@ $course_id = required_param('id', PARAM_INT);
 // handle bogus course id values as well
 require_login($course_id);
 // $PAGE, $USER, $COURSE, and other globals now set
+
+// Want this for subsequent print_error() calls
+$sCourseURL = new moodle_url("{$CFG->wwwroot}/course/view.php", array('id' => $COURSE->id));
+$sGroupsURL = new moodle_url("{$CFG->wwwroot}/group/index.php", array('id' => $COURSE->id));
+
 // up, check the capabilities (we need Manual Enrollment module)
 require_capability('enrol/manual:enrol', $PAGE->context);
 
