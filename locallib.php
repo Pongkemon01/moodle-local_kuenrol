@@ -31,6 +31,14 @@ require_once("$CFG->libdir/datalib.php");
 require_once("$CFG->libdir/enrollib.php");
 require_once("$CFG->libdir/grouplib.php");
 require_once("$CFG->dirroot/group/lib.php");
+require_once("$CFG->dirroot/user/lib.php");
+
+/* Generate log entry */
+function ku_log( $string )
+{
+        file_put_contents("Kuenrol.log",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
+}
+/*------------------------------------------------------------*/
 
 /* Function to convert TIS620 (ISO-8859-11) to UTF8
 Since, PHP does not natively support TIS620, we manually create it */
@@ -134,13 +142,6 @@ function iso8859_11toUTF8( $string )
 }
 /*------------------------------------------------------------*/
 
-/* Generate log entry */
-function ku_log( $string )
-{
-        file_put_contents("/tmp/Kuenrol.log",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
-}
-/*------------------------------------------------------------*/
-
 function csv_to_array( $string )
 {
 	$lines = explode(PHP_EOL, $string);
@@ -154,37 +155,6 @@ function csv_to_array( $string )
 	}
 
 	return( $array );
-}
-/*------------------------------------------------------------*/
-
-/* This function translates CSV data into a list of students who
-currently enrolled to the class. Its operation is very hard coded
-according to KU Regis format */
-function csv_to_stdudent_list( $string )
-{
-	$aaStdRawList = csv_to_array( $string );
-	$aStdList = array();
-	foreach( $aaStdRawList as $aStdRawData ) {
-		/* KU Regis format
-		   0 => index number
-		   1 => course number
-		   2 => student id
-		   3 => student fullname (in Thai)
-		   4 => student major id
-		   5 => student status ("W" = withdrew, "" = enrolled)
-		*/
-		if( strlen( $aStdRawData[5] ) == 0 ) {
-			$xStudent = new stdClass();
-			$xStudent->StudentID = $aStdRawData[2];	// Get student id
-			
-			$nSpacePos = mb_strpos( $aStdRawData[3], ' ', 0, 'UTF-8');
-			$xStudent->FirstName = mb_substr( $aStdRawData[3], 0, $nSpacePos, 'UTF-8' ); // Store first name
-			$xStudent->LastName = mb_substr( $aStdRawData[3], $nSpacePos + 1, null, 'UTF-8' ); // Store last name
-			
-			$aStdList[] = $xStudent;
-		}
-	}
-	return( $aStdList );
 }
 /*------------------------------------------------------------*/
 
@@ -547,6 +517,87 @@ function ku_gen_username( $sStudentID ) {
 /*------------------------------------------------------------*/
 
 /**
+ * This function translates CSV data into an array of objects representing
+ * students who currently enrolled to the class. Its operation is very
+ * hard coded according to KU Regis format.
+
+ * @param string $sCsvStream - The whole CSV file from KU Regis in a string
+ * @param string $sSecName - Name of the current section in process.
+ * @return array of Objects index by student ID
+ **/
+
+function csv_to_stdudent_list( $sCsvStream, $sSecName )
+{
+	$aasStdRawList = csv_to_array( $sCsvStream );
+	$axStdList = array();
+	foreach( $aasStdRawList as $asStdRawData ) {
+		/* KU Regis format
+		   0 => index number
+		   1 => course number
+		   2 => student id
+		   3 => student fullname (in Thai)
+		   4 => student major id
+		   5 => student status ("W" = withdrew, "" = enrolled)
+		*/
+		if( strlen( $asStdRawData[5] ) == 0 ) {
+			$xStudent = new stdClass();
+			$xStudent->nId = false;	// Dummy data for future
+			
+			$xStudent->sStudentID = $asStdRawData[2];	// Get student id
+			$xStudent->sUserName = ku_gen_username( $asStdRawData[2] );
+			
+			$nSpacePos = mb_strpos( $asStdRawData[3], ' ', 0, 'UTF-8');
+			$xStudent->sFirstName = mb_substr( $asStdRawData[3], 0, $nSpacePos, 'UTF-8' ); // Store first name
+			$xStudent->sLastName = mb_substr( $asStdRawData[3], $nSpacePos + 1, null, 'UTF-8' ); // Store last name
+			
+			$xStudent->asGroupList = array();
+			$xStudent->asGroupList[] = $sSecName;
+			
+			$axStdList[$xStudent->sStudentID] = $xStudent;
+		}
+	}
+	return( $axStdList );
+}
+/*------------------------------------------------------------*/
+
+/**
+ * Create an account for a student with the given information.
+ * The authentication method is set to LDAP by default
+ *
+ * @param Object $xStrudentInfo
+ * @return false|int id of newly created user. false if error
+ **/
+function create_moodle_user( $xStudentInfo ) {
+	// If the username is invalid
+	if( false === $xStudentInfo->sUserName ) {
+		return false;
+	}
+
+ku_log( "Create user : ". $xStudentInfo->sUserName );
+	
+	$xUser = new stdClass();
+	
+	// Setting fields from $xStudentInfo
+	$xUser->username = $xStudentInfo->sUserName;
+	$xUser->firstname = $xStudentInfo->sFirstName;
+	$xUser->lastname = $xStudentInfo->sLastName;
+	$xUser->email = $xStudentInfo->sUserName . '@ku.ac.th';
+	$xUser->idnumber = $xStudentInfo->sStudentID;
+	
+	// Setting remaining fields with default values
+	$xUser->confirmed    = 1;
+	$xUser->timemodified = time();
+	$xUser->timecreated  = time();
+	$xUser->suspended = 0;
+	$xUser->auth = 'ldap';
+	$xUser->lang = '';
+	$xUser->password = AUTH_PASSWORD_NOT_CACHED;
+	
+	return( user_create_user($xUser, false, false) );
+}
+/*------------------------------------------------------------*/
+
+/**
  * Returns a subset of users
  *
  * @global object
@@ -582,57 +633,40 @@ function ku_get_users($get=true, $search='', $fields='*', $sort='username ASC' )
 /*------------------------------------------------------------*/
 
 /**
- * Translate a username into a coresponding userid by looking up from the database.
- *
- * @param string $sUserName
- * @return mixed (false|integer) If the provided username doesnot exist, then 
- *          false is returned. Otherwise, the function returns the userid.
+ * Fill moodle userid field for each student.
+ * If any username within the list does not exist, that name is skipped or created.
+ * @param array $axStudents
+ * @param boolean $bAutoCreate
+ * @return nothing
  */
-function username_to_userid( $sUserName ) {
-	/* get_users searches the database for:
-		- first_name LIKE %$sUserName%
-		- last_name LIKE %$sUserName%
-		- email LIKE %$sUserName%
-		- useranme = $sUserName
-	   Therefore, the pattern covers all possible Nontri accounts with only
-	   student ID as the key. Therefore, $sUserName canbe a full Nontri account
-	   or a student ID. */
-	$xUserRecords = ku_get_users( true, $sUserName, 'id, username' );
+function find_students_userid( $axStudents, $bAutoCreate = false) {
+	foreach( $axStudents as $sStudentID=>$xStudentInfo ) {
+		/* get_users searches the database for:
+			- idnumber LIKE %$sUserName%
+			- email LIKE %$sUserName%
+			- useranme like %$sUserName
+		Therefore, the pattern covers all possible Nontri accounts with only
+		student ID as the key. Therefore, $sUserName canbe a full Nontri account
+		or a student ID. */
+		$xUserRecords = ku_get_users( true, $sStudentID, 'id, username' );
 		
-	// If username does not exists then return false
-	if( $xUserRecords === false ) {
-		return false;
-	} else {
-		$xUserRecordData = array_values( $xUserRecords );
-		if( count( $xUserRecordData ) < 1 ) {
-			return false;
+		// If username does not exists then a new user record should be created!!!
+		if( $xUserRecords === false ) {
+			if( $bAutoCreate ) {
+				$xStudentInfo->nId = create_moodle_user( $xStudentInfo );
+			}
 		} else {
-			return( $xUserRecordData[0]->id );
+			$xUserRecordData = array_values( $xUserRecords );
+			if( count( $xUserRecordData ) < 1 ) {
+				if( $bAutoCreate ) {
+					$xStudentInfo->nId = create_moodle_user( $xStudentInfo );
+				}
+			} else {
+				$xStudentInfo->nId = $xUserRecordData[0]->id;
+				$xStudentInfo->sUserName = $xUserRecordData[0]->username;
+			}
 		}
 	}
-}	
-/*------------------------------------------------------------*/
-
-/**
- * Translate a list of username into a list of userid by looking up from the database.
- * If any username within the list does not exist, that name is skipped.
- * @param array $aUsers
- * @return array $nUsers
- */
-function usernamelist_to_useridlist( $aUsers ) {
-	$nUsers = array();
-	
-	foreach( $aUsers as $sUserName ) {
-		$nUid = username_to_userid( $sUserName );
-		
-		// If username does not exists then continue to the next user
-		if( false === $nUid ) {
-			continue;
-		}
-		$nUsers[] = $nUid;
-	}
-	
-	return $nUsers;
 }
 /*------------------------------------------------------------*/
 
@@ -674,39 +708,42 @@ function get_unlist_groups( $aGroups ) {
 
 /**
  * Perform enrollment action (enrol new users and suspend/withdraw missing users).
- * @param array $aUers - The array of username or idnumber. The 'idnumber' is recommended
- *                       because it is what KU Regis provided and we don't need to worry
- *                       about the prefix letter 'b' or 'g'.
+ * @param array $axUsers - The array of student information indexed by student id.
  * @param array $aUnlistedGroupIDs - The array of group ids which are excluded from processing.
  * @param class $xManualEnrolInstance - The instance of 'manual' enrollment plugin in class-context.
  * @param integer $nRoleId
  * @param string $sMissingAct - action for users missing from the imported data.
  * @return none.
  */
-function enroll_action( $aUsers, $aUnlistedGroupIDs,  $xManualEnrolInstance, $nRoleId, $sMissingAct ) {
+function enroll_action( $axUsers, $aUnlistedGroupIDs,  $xManualEnrolInstance, $nRoleId, $sMissingAct ) {
     global $COURSE;
+
+ku_log( "Enrollment action");
 
     $xCourseContext = context_course::instance( $COURSE->id );
     $xSystemManualEnrol = enrol_get_plugin( 'manual' );
-	$nUsers = usernamelist_to_useridlist( $aUsers );
 	
     // Enroll new users
     if ( $nRoleId > 0 ) {
-        foreach( $nUsers as $nUid ) {
-            if( !is_enrolled( $xCourseContext, $nUid ) ) {
-                $xSystemManualEnrol->enrol_user( $xManualEnrolInstance, $nUid, $nRoleId );
+        foreach( $axUsers as $sStudentID=>$xStudentInfo ) {
+        	if( false === $xStudentInfo->nId ) {
+        		continue;	// Skip non existing user
+        	}
+            if( !is_enrolled( $xCourseContext, $xStudentInfo->nId ) ) {
+ku_log( "Enrol " . $xStudentInfo->sUserName );
+                $xSystemManualEnrol->enrol_user( $xManualEnrolInstance, $xStudentInfo->nId, $nRoleId );
             }
         }
     }
 
     // Withdraw/Suspend unlisted users
     if( $sMissingAct != 'nothing' ) {
-        $xEnrolUsers = get_enrolled_users( $xCourseContext );
+        $xEnrolUsers = get_enrolled_users( $xCourseContext, '', 0, 'u.id, u.username' );
 
         // Build userid of the members of unlisted group
         $anExcludedUserID = array();
         foreach( $aUnlistedGroupIDs as $nUnlistedID ) {
-        	$axGroupMembers = groups_get_members( $nUnlistedID, 'u.id' );
+        	$axGroupMembers = groups_get_members( $nUnlistedID, 'u.id, u.username' );
         	foreach( $axGroupMembers as $xGroupMember ) {
         		if( !in_array( $xGroupMember->id, $anExcludedUserID ) ) {
         			$anExcludedUserID[] = $xGroupMember->id;
@@ -725,11 +762,14 @@ function enroll_action( $aUsers, $aUnlistedGroupIDs,  $xManualEnrolInstance, $nR
         		continue;
         	}
         	
-        	// Process suspension or withdrawing only to students
-            if( !in_array( $xEnrolPerson->id, $nUsers ) ) {
+        	// Process suspension or withdrawing only to students.
+        	// $axUsers is indexed by student id
+            if( !array_key_exists( substr( $xEnrolPerson->username, 1 ), $axUsers ) ) {
                 if( $sMissingAct == 'suspend' ) {
+ku_log( "Suspend user " . $xEnrolPerson->username );
                     $xSystemManualEnrol->update_user_enrol( $xManualEnrolInstance, $xEnrolPerson->id, 1 );
                 } else {
+ku_log( "Withdraw user " . $xEnrolPerson->username );
                     $xSystemManualEnrol->unenrol_user( $xManualEnrolInstance, $xEnrolPerson->id );
                 }
             }
@@ -740,39 +780,38 @@ function enroll_action( $aUsers, $aUnlistedGroupIDs,  $xManualEnrolInstance, $nR
 
 /**
  * Perform group-change action.
- * @param array $aUserGroups in the form of ( username/idnumber => array( group_names_list ) )
- *                       The 'idnumber' is recommended because it is what KU Regis provided
- *                       and we don't need to worryabout the prefix letter 'b' or 'g'.
+ * @param array $axUsers - The array of student information indexed by student id.
  * @param array $aUnlistedGroupIDs - The array of group ids which are excluded from processing.
  * @param integer $autogroupcreate - Whether new group should be created if required?
  * @param integer $autogroupwithdraw - Whether users should be withdrawn from the group not specified in imported data?
  * @return none.
  */
-function group_action( $aUserGroups, $aUnlistedGroupIDs, $bAutoGroupCreate, $bAutoGroupWithdraw ) {
+function group_action( $axUsers, $aUnlistedGroupIDs, $bAutoGroupCreate, $bAutoGroupWithdraw ) {
     global $COURSE;
+
+ku_log( "Group action" );
 
     $xCourseContext = context_course::instance( $COURSE->id );
 
-    foreach( $aUserGroups as $sUserName=>$aUserGroups ) {
-    	$nUid = username_to_userid( $sUserName );
-    	if( false === $nUid ) {
+    foreach( $axUsers as $sStudentID=>$xStudentInfo ) {
+    	if( false === $xStudentInfo->nId ) {
     		// Skip missing user. All users must already enrolled here.
     		continue;
     	}
-        if( !is_enrolled( $xCourseContext, $nUid ) ) {
+        if( !is_enrolled( $xCourseContext, $xStudentInfo->nId ) ) {
             // skip unenrolled users as enrol_action should finish all enrollment
             continue;
         }
 
         // Add to group
-        foreach( $aUserGroups as $sGroupName ) {
-
+        foreach( $xStudentInfo->asGroupList as $sGroupName ) {
             // Prepare course group
             $nGid = groups_get_group_by_name( $COURSE->id, $sGroupName );
             if( false ===  $nGid ) {
                 // If group not exists, should we create it?
                 if ( $bAutoGroupCreate ) {
                     // Create a group
+ku_log( "Create new group with name " . $sGroupName );
                     $newgroupdata = new stdClass();
                     $newgroupdata->name = $sGroupName;
                     $newgroupdata->courseid = $COURSE->id;
@@ -791,21 +830,23 @@ function group_action( $aUserGroups, $aUnlistedGroupIDs, $bAutoGroupCreate, $bAu
             }
 
             // Add user to group
-            if ( !groups_is_member( $nGid, $nUid ) ) {
-                groups_add_member( $nGid, $nUid);
+            if ( !groups_is_member( $nGid, $xStudentInfo->nId ) ) {
+ku_log( "Invoke user " . $xStudentInfo->sUserName . " into " . $sGroupName );
+                groups_add_member( $nGid, $xStudentInfo->nId );
             }
         }
 
         // Withdraw from unlisted groups if required
-        if( $bAutoGroupWithdraw && is_student( $nUid ) ) {
+        if( $bAutoGroupWithdraw && is_student( $xStudentInfo->nId ) ) {
             // Get current groups that the user already in
-            $axEnrolledGroups = groups_get_all_groups( $COURSE->id, $nUid );
+            $axEnrolledGroups = groups_get_all_groups( $COURSE->id, $xStudentInfo->nId );
 
             // Iterate
             foreach( $axEnrolledGroups as $xEnrolledGroup ) {
                 if( ( !in_array( $xEnrolledGroup->id, $aUnlistedGroupIDs) ) && 
-                	( !in_array( $xEnrolledGroup->name, $aUserGroups ) ) ) {
-                    groups_remove_member( $xEnrolledGroup->id, $nUid );
+                	( !in_array( $xEnrolledGroup->name, $xStudentInfo->asGroupList ) ) ) {
+ku_log( "Revoke user " . $xStudentInfo.sUserName . " from " . $xEnrolledGroup->name );
+                    groups_remove_member( $xEnrolledGroup->id, $xStudentInfo->nId );
                 }
             }
         }

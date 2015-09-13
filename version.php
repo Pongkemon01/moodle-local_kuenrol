@@ -30,9 +30,9 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin             = new stdClass();
 
-$plugin->version    = 2015090600;
+$plugin->version    = 2015090900;
 $plugin->requires   = 2012062500;
-$plugin->release    = "1.1.0";
+$plugin->release    = "2.0.0";
 $plugin->component = 'local_kuenrol';
 $plugin->cron       = 0;
 $plugin->maturity   = MATURITY_STABLE;

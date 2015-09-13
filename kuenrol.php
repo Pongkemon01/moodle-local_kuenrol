@@ -223,7 +223,7 @@ if ( $xForm2->is_cancelled() ) {
 	} else {
 		$sDropAction = 'nothing';
 	}
-	$nRoleID = intval( $xForm2Data->nRoleID );
+	$nRoleID = intval( $xForm2Data->nRoleID ); // Role-id = 0 means no enrollment
 	$bAutoGroup = $xForm2Data->bAutoGroup;
 	$bAutoRevoke = $xForm2Data->bAutoRevoke;
 	
@@ -250,11 +250,13 @@ if ( $xForm2->is_cancelled() ) {
 $aRegisSections = regis_get_sec_list( $sCourseID, $sYear, $sSem, $sCookie );
 
 //file_put_contents( '/tmp/moodletxt', var_export( $aRegisSections, true ) . "\n" );
+ku_log( "=== Start on " . $COURSE->shortname . " ===" );
 
 // Build data for enrollment and group-switch action. Both acctions can accept
 // either username (Nontri account) or idnumer as the key.
-$aStdIDList = array();
-$aStdIDGroupList = array();	
+//$aStdIDList = array();
+//$aStdIDGroupList = array();
+$axStudents = array();	// Array of all students in the course
 foreach( $aGroups as $sGroupName ) {
 	// Split group name into lecture and lab section id.
 	$aGroupPair = explode( ':', $sGroupName );
@@ -274,11 +276,25 @@ foreach( $aGroups as $sGroupName ) {
 	// Retrive data from KU Regis in CSV format
 	$xCsvStdList = regis_get_students( $sCourseID, $sYear,
 									   $sSem, $sLectSec, $sLabSec, $sCookie );
-	// Extract KU Regis output to a list of student id
-	$aStudents = csv_to_stdudent_list( $xCsvStdList );
+	// Extract KU Regis output of a sections to a list of student id
+	$axStudentInSec = csv_to_stdudent_list( $xCsvStdList, 'S' . $sGroupName );
+	
+	// Merge student within a section into the whole course student list.
+	foreach( $axStudentInSec as $sStudentID=>$xStudentData ) {
+		if( array_key_exists( $sStudentID, $axStudents ) ) {
+			// The student already exist then add his/her section into the list
+			$axStudents[ $sStudentID ]->asGroupList[] = array_merge( 
+				$axStudents[ $sStudentID ]->asGroupList, $xStudentData->asGroupList );
+		} else {
+			// The student does not exist yet so we add the new record
+			// A new student is always create by "new stdClass()" so we don't
+			// need to worry about deep copy here
+			$axStudents[ $sStudentID ] = $xStudentData;
+		}
+	}
 
 	// Process each student
-	foreach( $aStudents as $xStudentInfo ) {
+	/*foreach( $aStudents as $xStudentInfo ) {
 		if( !in_array( $xStudentInfo->StudentID, $aStdIDList ) ) {
 			$aStdIDList[] = $xStudentInfo->StudentID;
 		}
@@ -287,21 +303,25 @@ foreach( $aGroups as $sGroupName ) {
 		}
 		//array_push( $aStdIDGroupList[$sStdID], ( "S" . $sGroupName ) );
 		$aStdIDGroupList[$xStudentInfo->StudentID][] = 'S' . $sGroupName;
-	}
+	}*/
 }
 
 // We don't need KU Regis now. Log out.
 regis_logout( $sCookie );
+
+// Look up moodle user id for each student. The second parameter means
+// to get the boolean value of the comparison
+find_students_userid( $axStudents, ( $nRoleID > 0 ) );
 
 // Retrieve unselected groups in the course. These groups will be untouched.
 $aUnlistedGroupIDs = get_unlist_groups( $aGroups );
 
 // Perform enrollment level action
 if ($xManualEnrollInstance != null && ($nRoleID > 0 || $sDropAction != 'nothing')) {
-    enroll_action($aStdIDList, $aUnlistedGroupIDs, $xManualEnrollInstance, $nRoleID, $sDropAction);
+    enroll_action($axStudents, $aUnlistedGroupIDs, $xManualEnrollInstance, $nRoleID, $sDropAction);
 }
 
-group_action($aStdIDGroupList, $aUnlistedGroupIDs, $bAutoGroup, $bAutoRevoke);
+group_action($axStudents, $aUnlistedGroupIDs, $bAutoGroup, $bAutoRevoke);
 
 // Typically you finish up by redirecting to somewhere where the user
 // can see what they did.
