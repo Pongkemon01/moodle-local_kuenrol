@@ -51,12 +51,15 @@ require_capability('enrol/manual:enrol', $PAGE->context);
 // Don't confuse with the enrollment plugins enabled in system level.
 $nDefaultRoleID = 0;
 $xManualEnrollInstance = null;
+$xSelfEnrollInstance = null;
 $aEnrolsEnabled = enrol_get_instances($COURSE->id, true);
 foreach( $aEnrolsEnabled as $enrol ) {
-    if( $enrol->enrol == 'manual' ) {
+    if( ( $enrol->enrol == 'manual' ) && ( $xManualEnrollInstance == null ) ) {
         $xManualEnrollInstance = $enrol;
         $nDefaultRoleID = $enrol->roleid;
-        break;
+    }
+    if( ( $enrol->enrol == 'self' ) && ( $xSelfEnrollInstance == null ) ) {
+        $xSelfEnrollInstance = $enrol;
     }
 }
 
@@ -292,18 +295,6 @@ foreach( $aGroups as $sGroupName ) {
 			$axStudents[ $sStudentID ] = $xStudentData;
 		}
 	}
-
-	// Process each student
-	/*foreach( $aStudents as $xStudentInfo ) {
-		if( !in_array( $xStudentInfo->StudentID, $aStdIDList ) ) {
-			$aStdIDList[] = $xStudentInfo->StudentID;
-		}
-		if( !array_key_exists( $xStudentInfo->StudentID, $aStdIDGroupList ) ) {
-			$aStdIDGroupList[$xStudentInfo->StudentID] = array();
-		}
-		//array_push( $aStdIDGroupList[$sStdID], ( "S" . $sGroupName ) );
-		$aStdIDGroupList[$xStudentInfo->StudentID][] = 'S' . $sGroupName;
-	}*/
 }
 
 // We don't need KU Regis now. Log out.
@@ -317,8 +308,8 @@ find_students_userid( $axStudents, ( $nRoleID > 0 ) );
 $aUnlistedGroupIDs = get_unlist_groups( $aGroups );
 
 // Perform enrollment level action
-if ($xManualEnrollInstance != null && ($nRoleID > 0 || $sDropAction != 'nothing')) {
-    enroll_action($axStudents, $aUnlistedGroupIDs, $xManualEnrollInstance, $nRoleID, $sDropAction);
+if (($xManualEnrollInstance != null || $xSelfEnrollInstance != null) && ($nRoleID > 0 || $sDropAction != 'nothing')) {
+    enroll_action($axStudents, $aUnlistedGroupIDs, $xManualEnrollInstance, $xSelfEnrollInstance, $nRoleID, $sDropAction);
 }
 
 group_action($axStudents, $aUnlistedGroupIDs, $bAutoGroup, $bAutoRevoke);
