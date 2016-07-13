@@ -21,6 +21,9 @@
  * @author		Akrapong Patchararungruang
  * @copyright	2015 Kasetsart University
  * @license		http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ *
+ * @changelog	17 June 2016 : Move all functions retrieving data from KU Regis
+ *				into a class. Also, support for Sakonnakon is added.
  */
 
 
@@ -33,112 +36,12 @@ require_once("$CFG->libdir/grouplib.php");
 require_once("$CFG->dirroot/group/lib.php");
 require_once("$CFG->dirroot/user/lib.php");
 
+require_once('kuregis.php');
+
 /* Generate log entry */
 function ku_log( $string )
 {
 		file_put_contents("Kuenrol.log",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
-}
-/*------------------------------------------------------------*/
-
-/* Function to convert TIS620 (ISO-8859-11) to UTF8
-Since, PHP does not natively support TIS620, we manually create it */
-function iso8859_11toUTF8( $string )
-{
-	if ( ! preg_match("/[\241-\377]/", $string) )
-		return $string;
-
-	$iso8859_11 = array(
-			"\xa1" => "\xe0\xb8\x81", 
-			"\xa2" => "\xe0\xb8\x82",
-			"\xa3" => "\xe0\xb8\x83",
-			"\xa4" => "\xe0\xb8\x84",
-			"\xa5" => "\xe0\xb8\x85",
-			"\xa6" => "\xe0\xb8\x86",
-			"\xa7" => "\xe0\xb8\x87",
-			"\xa8" => "\xe0\xb8\x88",
-			"\xa9" => "\xe0\xb8\x89",
-			"\xaa" => "\xe0\xb8\x8a",
-			"\xab" => "\xe0\xb8\x8b",
-			"\xac" => "\xe0\xb8\x8c",
-			"\xad" => "\xe0\xb8\x8d",
-			"\xae" => "\xe0\xb8\x8e",
-			"\xaf" => "\xe0\xb8\x8f",
-			"\xb0" => "\xe0\xb8\x90",
-			"\xb1" => "\xe0\xb8\x91",
-			"\xb2" => "\xe0\xb8\x92",
-			"\xb3" => "\xe0\xb8\x93",
-			"\xb4" => "\xe0\xb8\x94",
-			"\xb5" => "\xe0\xb8\x95",
-			"\xb6" => "\xe0\xb8\x96",
-			"\xb7" => "\xe0\xb8\x97",
-			"\xb8" => "\xe0\xb8\x98",
-			"\xb9" => "\xe0\xb8\x99",
-			"\xba" => "\xe0\xb8\x9a",
-			"\xbb" => "\xe0\xb8\x9b",
-			"\xbc" => "\xe0\xb8\x9c",
-			"\xbd" => "\xe0\xb8\x9d",
-			"\xbe" => "\xe0\xb8\x9e",
-			"\xbf" => "\xe0\xb8\x9f",
-			"\xc0" => "\xe0\xb8\xa0",
-			"\xc1" => "\xe0\xb8\xa1",
-			"\xc2" => "\xe0\xb8\xa2",
-			"\xc3" => "\xe0\xb8\xa3",
-			"\xc4" => "\xe0\xb8\xa4",
-			"\xc5" => "\xe0\xb8\xa5",
-			"\xc6" => "\xe0\xb8\xa6",
-			"\xc7" => "\xe0\xb8\xa7",
-			"\xc8" => "\xe0\xb8\xa8",
-			"\xc9" => "\xe0\xb8\xa9",
-			"\xca" => "\xe0\xb8\xaa",
-			"\xcb" => "\xe0\xb8\xab",
-			"\xcc" => "\xe0\xb8\xac",
-			"\xcd" => "\xe0\xb8\xad",
-			"\xce" => "\xe0\xb8\xae",
-			"\xcf" => "\xe0\xb8\xaf",
-			"\xd0" => "\xe0\xb8\xb0",
-			"\xd1" => "\xe0\xb8\xb1",
-			"\xd2" => "\xe0\xb8\xb2",
-			"\xd3" => "\xe0\xb8\xb3",
-			"\xd4" => "\xe0\xb8\xb4",
-			"\xd5" => "\xe0\xb8\xb5",
-			"\xd6" => "\xe0\xb8\xb6",
-			"\xd7" => "\xe0\xb8\xb7",
-			"\xd8" => "\xe0\xb8\xb8",
-			"\xd9" => "\xe0\xb8\xb9",
-			"\xda" => "\xe0\xb8\xba",
-			"\xdf" => "\xe0\xb8\xbf",
-			"\xe0" => "\xe0\xb9\x80",
-			"\xe1" => "\xe0\xb9\x81",
-			"\xe2" => "\xe0\xb9\x82",
-			"\xe3" => "\xe0\xb9\x83",
-			"\xe4" => "\xe0\xb9\x84",
-			"\xe5" => "\xe0\xb9\x85",
-			"\xe6" => "\xe0\xb9\x86",
-			"\xe7" => "\xe0\xb9\x87",
-			"\xe8" => "\xe0\xb9\x88",
-			"\xe9" => "\xe0\xb9\x89",
-			"\xea" => "\xe0\xb9\x8a",
-			"\xeb" => "\xe0\xb9\x8b",
-			"\xec" => "\xe0\xb9\x8c",
-			"\xed" => "\xe0\xb9\x8d",
-			"\xee" => "\xe0\xb9\x8e",
-			"\xef" => "\xe0\xb9\x8f",
-			"\xf0" => "\xe0\xb9\x90",
-			"\xf1" => "\xe0\xb9\x91",
-			"\xf2" => "\xe0\xb9\x92",
-			"\xf3" => "\xe0\xb9\x93",
-			"\xf4" => "\xe0\xb9\x94",
-			"\xf5" => "\xe0\xb9\x95",
-			"\xf6" => "\xe0\xb9\x96",
-			"\xf7" => "\xe0\xb9\x97",
-			"\xf8" => "\xe0\xb9\x98",
-			"\xf9" => "\xe0\xb9\x99",
-			"\xfa" => "\xe0\xb9\x9a",
-			"\xfb" => "\xe0\xb9\x9b"
-		);
-
-	$string=strtr($string,$iso8859_11);
-	return $string;
 }
 /*------------------------------------------------------------*/
 
@@ -155,245 +58,6 @@ function csv_to_array( $string )
 	}
 
 	return( $array );
-}
-/*------------------------------------------------------------*/
-
-/* 
-CAUTION: We require to use RegisGetSecList of the same course in the same
-semester and academic year before using this function. Otherwise, the KU Regis
-will not generate student-listing file.
-
-Parameter hints:
-$year				: last 2 digits of B.E.
-$semester			: 1 = First, 2 = Second, 3 = Third, 4 = Summer, 5 = Summer2
-$grp_lect/$grp_lab	: 0 if not available
-*/
-function regis_get_students( $courseid, $year, $semester, $grp_lect, $grp_lab, $cookies )
-{
-	$req_opt = sprintf( 'Sm=%s&Yr=%s&TCs_Code=%s&TLec=%s&TLab=%s', 
-						 $semester, $year, $courseid, $grp_lect, $grp_lab );
-	$trig_url = 'https://regis.ku.ac.th/class_cscode.php?' . $req_opt;
-
-	$csv_url = sprintf( 'https://regis.ku.ac.th/grade/download_file/class_%s_%s%s.txt',
-						$courseid, $year, $semester);
-
-
-	/* Initialize curl */
-	$ch = curl_init();
-
-	/* Set cookie */
-	curl_setopt( $ch, CURLOPT_COOKIE, $cookies );
-
-	/* Disable verifying server SSL certificate */
-	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-
-	/* Get all html result into a variable for parsing cookies */
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-
-	/*==== First step: Trig the server to generate csv data ====*/
-	/* Set URL */
-	curl_setopt( $ch, CURLOPT_URL, $trig_url );
-	curl_setopt( $ch, CURLOPT_REFERER, 'https://regis.ku.ac.th/query_cscode.php' );
-	
-	/* Execute URL request */
-	$result = curl_exec( $ch );
-
-	/*==== Second step: Load the generated csv data ====*/
-	/* Set URL */
-	curl_setopt( $ch, CURLOPT_URL, $csv_url );
-	curl_setopt( $ch, CURLOPT_REFERER, 'https://regis.ku.ac.th/query_cscode.php' );
-	
-	/* Execute URL request. */
-	$result = curl_exec( $ch );
-
-	/* Close curl */
-	curl_close( $ch );
-
-	/* KU-Regis gives ISO8859-11-encodeded text, so convert it to utf8 */
-	$result_utf8 = iso8859_11toUTF8( $result );
-	
-	/* Check for <title>404 Not Found</title> for unknown course */
-	if( false !== strpos( $result_utf8, '<title>404 Not Found</title>' ) ) {
-		return( '' );
-	} else {
-		return( $result_utf8 );
-	}
-}
-/*------------------------------------------------------------*/
-
-/* 
-Parameter hints:
-$year				: last 2 digits of B.E.
-$semester			: 1 = First, 2 = Second, 3 = Third, 4 = Summer
-*/
-function regis_get_sec_list( $courseid, $year, $semester, $cookies )
-{
-	/* ---- Step 1: Retrieve section list as an HTML document from Regis --- */
-	$aData = array( 'qCs_Code' => $courseid,
-					'qYr' => $year,
-					'qSm'=> $semester );
-
-	/* Initialize curl */
-	$ch = curl_init();
-	
-	/* Set URL */
-	curl_setopt( $ch, CURLOPT_URL, 'https://regis.ku.ac.th/query_cscode.php' );
-	curl_setopt( $ch, CURLOPT_REFERER, 'https://regis.ku.ac.th/registration_report_menu.php' );
-
-	/* Set query data */
-	curl_setopt( $ch, CURLOPT_POST, true );
-	curl_setopt( $ch, CURLOPT_POSTFIELDS, $aData );
-
-	/* Set cookie */
-	curl_setopt( $ch, CURLOPT_COOKIE, $cookies );
-
-	/* Disable verifying server SSL certificate */
-	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-
-	/* Get all html result into a variable for parsing cookies */
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-
-
-	/* Execute URL request */
-	$result = curl_exec( $ch );
-
-	/* Close curl */
-	curl_close( $ch );
-	
-	/* If http request fail, return empty group array */
-	
-	if( false === $result ) {
-		return( array() );
-	}
-	
-	/* KU-Regis gives ISO8859-11-encodeded text, so convert it to utf8 */
-	$result_utf8 = iso8859_11toUTF8( $result );
-	/* Check for <title>404 Not Found</title> for unknown course */
-	if( false !== strpos( $result_utf8, '<title>404 Not Found</title>' ) ) {
-		return( array() );
-	}
-	
-	/* --- Step 2: Parse retrieved HTML document for the section list --- */
-
-	/* Store HTML document in DOM */
-	$dom = new DOMDocument;
-	@$dom->loadHTML( $result_utf8 ); /* Suppress ill-formed html warning */
-
-	$tables = $dom->getElementsByTagName( 'table' );
-
-	/* This part is a dirty hard-code. We assume that there must be
-	3 <table>-tags. The last <table> must be the section list */
-	$sec_table = $tables->item( 2 );
-	$sec_rows = $sec_table->childNodes;
-	
-	/* Section list starts from row 1 (counting from 0 ) */
-	$sec_array = array();
-	for( $i = 1; $i < $sec_rows->length; $i++ )
-	{
-		if( $sec_rows->item( $i )->hasChildNodes() )
-		{
-			$sec_items = $sec_rows->item( $i )->childNodes;
-			// Lecture:Lab
-			$sec_data = $sec_items->item( 3 )->nodeValue . ':' . $sec_items->item( 4 )->nodeValue;
-			$sec_array[] = $sec_data;
-		}
-	}
-
-	return( $sec_array );
-}
-/*------------------------------------------------------------*/
-
-/**
- * regis_login : Login to KU Regis system
- * @param string $username
- * @param string $password
- * @param string $campus
- * @return string - The cookie string used for further requests. (empty string if fail)
- **/
-function regis_login( $username, $password, $campus )
-{
-	$data = array(	'UserName' => $username, 
-					'Password' => $password,
-					'Campus' => $campus );
-
-	/* Initialize curl */
-	$ch = curl_init();
-
-	/* Set URL */
-	curl_setopt( $ch, CURLOPT_URL, 'https://regis.ku.ac.th/login.php' );
-
-	/* Set login data */
-	curl_setopt( $ch, CURLOPT_POST, true );
-	curl_setopt( $ch, CURLOPT_POSTFIELDS, $data );
-
-	/* Disable verifying server SSL certificate */
-	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-
-	/* Get all html result into a variable for parsing cookies */
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_HEADER, true );
-
-	/* Execute URL request */
-	$result = curl_exec( $ch );
-	
-	/* Close curl */
-	curl_close( $ch );
-
-	/* If login fail, return empty cookie */
-	if( false === $result ) {
-		return '';
-	}
-
-	/* get cookie
-	   multi-cookie variant contributed by @Combuster in comments
-	   Server may create duplicated cookie entries, this step overwrites
-	   the values of duplicated cookies with the latest ones */
-	preg_match_all( '/^Set-Cookie:\s*([^;\s]*)/mi', $result, $matches );
-	$cookies = array();
-	foreach( $matches[1] as $item )
-	{
-		parse_str( $item, $cookie );
-		$cookies = array_merge( $cookies, $cookie );
-	}
-
-	/* Create cookie string for next curl. All cookies are set to their
-	   latest value */
-	$cookies_text = '';
-	foreach($cookies as $key=>$value)
-	{
-		if( strlen( $cookies_text ) > 0 )
-		{
-			$cookies_text = $cookies_text . ';';
-		}
-		$cookies_text = $cookies_text . $key . '=' . $value;
-	}
-	
-	return( $cookies_text );
-}
-/*------------------------------------------------------------*/
-
-function regis_logout( $cookies )
-{
-	/* Initialize curl */
-	$ch = curl_init();
-
-	/* Set URL */
-	curl_setopt( $ch, CURLOPT_URL, 'https://regis.ku.ac.th/logout.php' );
-
-	/* Set cookie */
-	curl_setopt( $ch, CURLOPT_COOKIE, $cookies );
-
-	/* Disable verifying server SSL certificate */
-	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-
-	/* Get all html result into a variable for parsing cookies */
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-	curl_setopt( $ch, CURLOPT_HEADER, true );
-
-	/* Execute URL request */
-	$result = curl_exec( $ch );
-	
-	return( $result );
 }
 /*------------------------------------------------------------*/
 
@@ -526,7 +190,7 @@ function ku_gen_username( $sStudentID ) {
  * @return array of Objects index by student ID
  **/
 
-function csv_to_stdudent_list( $sCsvStream, $sSecName )
+function csv_to_student_list( $sCsvStream, $sSecName )
 {
 	$aasStdRawList = csv_to_array( $sCsvStream );
 	$axStdList = array();
@@ -568,6 +232,8 @@ function csv_to_stdudent_list( $sCsvStream, $sSecName )
  * @return false|int id of newly created user. false if error
  **/
 function create_moodle_user( $xStudentInfo ) {
+	global $CFG;
+	
 	// If the username is invalid
 	if( false === $xStudentInfo->sUserName ) {
 		return false;
@@ -586,6 +252,7 @@ ku_log( "Create user : ". $xStudentInfo->sUserName );
 	
 	// Setting remaining fields with default values
 	$xUser->confirmed	 = 1;
+	$xUser->mnethostid	 = $CFG->mnet_localhost_id;;
 	$xUser->timemodified = time();
 	$xUser->timecreated	 = time();
 	$xUser->suspended = 0;
@@ -593,7 +260,7 @@ ku_log( "Create user : ". $xStudentInfo->sUserName );
 	$xUser->lang = '';
 	$xUser->password = AUTH_PASSWORD_NOT_CACHED;
 	
-	return( user_create_user($xUser, false, false) );
+	return( user_create_user( $xUser, false ) );
 }
 /*------------------------------------------------------------*/
 
@@ -639,8 +306,8 @@ function ku_get_users($get=true, $search='', $fields='*', $sort='username ASC' )
  * @param boolean $bAutoCreate
  * @return nothing
  */
-function find_students_userid( $axStudents, $bAutoCreate = false) {
-	foreach( $axStudents as $sStudentID=>$xStudentInfo ) {
+function find_students_userid( &$axStudents, $bAutoCreate = false) {
+	foreach( $axStudents as $sStudentID=>&$xStudentInfo ) {
 		/* get_users searches the database for:
 			- idnumber LIKE %$sUserName%
 			- email LIKE %$sUserName%
@@ -733,7 +400,7 @@ ku_log( "Enrollment action");
 			}
 			if( !is_enrolled( $xCourseContext, $xStudentInfo->nId ) ) {
 ku_log( "Enrol " . $xStudentInfo->sUserName );
-				$xSystemManualEnrol->enrol_user( $xManualEnrollInstance, $xStudentInfo->nId, $nRoleId );
+				$xSystemManualEnrol->enrol_user( $xManualEnrollInstance, $xStudentInfo->nId, $nRoleId, time() );
 			}
 		}
 	}
@@ -772,7 +439,7 @@ ku_log( "Suspend user " . $xEnrolPerson->username );
 					if( $xManualEnrollInstance != null ) {
 						$xSystemManualEnrol->update_user_enrol( $xManualEnrollInstance, $xEnrolPerson->id, 1 );
 					}
-					if( $xSlefEnrollInstance != null ) {
+					if( $xSelfEnrollInstance != null ) {
 						$xSystemSelfEnrol->update_user_enrol( $xSelfEnrollInstance, $xEnrolPerson->id, 1 );
 					}
 				} else {
@@ -780,7 +447,7 @@ ku_log( "Withdraw user " . $xEnrolPerson->username );
 					if( $xManualEnrollInstance != null ) {
 						$xSystemManualEnrol->unenrol_user( $xManualEnrollInstance, $xEnrolPerson->id );
 					}
-					if( $xSlefEnrollInstance != null ) {
+					if( $xSelfEnrollInstance != null ) {
 						$xSystemSelfEnrol->unenrol_user( $xSelfEnrollInstance, $xEnrolPerson->id );
 					}
 				}
@@ -859,9 +526,9 @@ ku_log( "Invoke user " . $xStudentInfo->sUserName . " into " . $sGroupName );
 					( !in_array( $xEnrolledGroup->name, $xStudentInfo->asGroupList ) ) ) {
 					$bStatus = groups_remove_member( $xEnrolledGroup->id, $xStudentInfo->nId );
 if( $bStatus ) {
-	ku_log( "Revoke user " . $xStudentInfo.sUserName . " from " . $xEnrolledGroup->name . " (Success)" );
+	ku_log( "Revoke user " . $xStudentInfo->sUserName . " from " . $xEnrolledGroup->name . " (Success)" );
 } else {
-	ku_log( "Revoke user " . $xStudentInfo.sUserName . " from " . $xEnrolledGroup->name . " (FAIL!!)" );
+	ku_log( "Revoke user " . $xStudentInfo->sUserName . " from " . $xEnrolledGroup->name . " (FAIL!!)" );
 }
 				}
 			}

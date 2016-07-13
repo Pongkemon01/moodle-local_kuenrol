@@ -41,6 +41,7 @@ $string['f1_password']		= 'Nontri password';
 $string['f1_campus']		= 'Campus';
 $string['f1_bangken']		= 'Bangken';
 $string['f1_kumpangsaen']	= 'Kumpangsaen';
+$string['f1_sakon']			= 'Sakonnakon';
 $string['f1_courseid']		= 'Course ID';
 $string['f1_year']			= 'Academic year  25';
 $string['f1_semester']		= 'Semester';
@@ -49,6 +50,7 @@ $string['f1_sem_second']	= 'Second';
 $string['f1_sem_third']		= 'Third';
 $string['f1_sem_summer']	= 'Summer';
 $string['f1_sem_summer2']	= 'Summer 2';
+$string['f1_sem_summer_fv']	= 'Summer (Vet and Forestry)';
 
 // String for from2
 $string['f2_header']		= 'Section choices.';

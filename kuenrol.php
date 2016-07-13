@@ -63,6 +63,9 @@ foreach( $aEnrolsEnabled as $enrol ) {
     }
 }
 
+// Init for KURegis instance
+$xKURegis = null;
+
 // Extract course information from tags
 if( isset( $COURSE->idnumber ) ) {
 	$sCourseTag = $COURSE->idnumber;
@@ -81,6 +84,7 @@ $sCookie = optional_param( 'cookies', '', PARAM_RAW );
 $sCourseID = optional_param( 'courseid', '00000000', PARAM_RAW );
 $sSem = optional_param( 'sem', '1', PARAM_RAW );
 $sYear = optional_param( 'year', '57', PARAM_RAW );
+$sCampus = optional_param( 'campus', 'B', PARAM_RAW );
 
 // Set page environment
 $sPageHeadTitle = get_string( 'pluginname', local_kuenrol_form1::$pluginname ) . ' : ' . $COURSE->shortname;
@@ -113,6 +117,7 @@ if( strlen( $sCookie ) == 0 ) {
 	    $sCourseID = $xForm1Data->sCourseId;
 	    $sYear = $xForm1Data->sYear;
 	    $sSem = strval( $xForm1Data->nSem );
+	    $sCampus = $xForm1Data->sCampus;
     
 	    // Cleaning all numeric field because Moodle always trim the leading zero
    		if( strlen( $sCourseID ) < 8 ) {
@@ -126,15 +131,23 @@ if( strlen( $sCookie ) == 0 ) {
 		   	}while( strlen( $sYear ) < 2 );
    		}
 
+		// Create KU Regis instance based on campus
+		if( $sCampus == 'B' || $sCampus == 'K' ) {
+			$xKURegis = new CentralRegis();
+		} else {
+			$xKURegis = new SakonRegis();
+		}
+			
 		// Login to KU Regis
-		$sCookie = regis_login( $xForm1Data->sAccount, $xForm1Data->sPassword, $xForm1Data->sCampus );
+		$sCookie = $xKURegis->login( $xForm1Data->sAccount, $xForm1Data->sPassword, $xForm1Data->sCampus );
 		if( strlen( $sCookie ) == 0 ) {
 			// Cannot login. Display error and redirect
 			print_error( 'Fail to login to KU Regis', '', $sCourseURL );
 		}
 	
 		// Get section list in the course
-		$aRegisSections = regis_get_sec_list( $sCourseID, $sYear, $sSem, $sCookie );
+		$xKURegis->set_active_course( $sCourseID, $sYear, $sSem );
+		$aRegisSections = $xKURegis->get_sec_list();
 		if( count( $aRegisSections ) <= 0 ) {
 			// No section available
 			print_error( 'This course is not available in the selected semester', '', $sCourseURL );
@@ -166,9 +179,16 @@ if( strlen( $sCookie ) == 0 ) {
 			$sYear= '0'. $sYear;
 	   	}while( strlen( $sYear ) < 2 );
    	}
+	// Create KU Regis instance based on campus and previously set cookies
+	if( $sCampus == 'B' || $sCampus == 'K' ) {
+		$xKURegis = new CentralRegis($sCookie);
+	} else {
+		$xKURegis = new SakonRegis($sCookie);
+	}
 
 	// Get section list in the course
-	$aRegisSections = regis_get_sec_list( $sCourseID, $sYear, $sSem, $sCookie );
+	$xKURegis->set_active_course( $sCourseID, $sYear, $sSem );
+	$aRegisSections = $xKURegis->get_sec_list();
 	if( count( $aRegisSections ) <= 0 ) {
 		// No section available
 		print_error( 'This course is not available in the selected semester', '', $sCourseURL );
@@ -202,6 +222,7 @@ $xForm2 = new local_kuenrol_form2( null,
 									'cancreate' => $bCanCreate,
 									'default_roleid' => $nDefaultRoleID,
 									'courseid' => $sCourseID, 'sem' => $sSem, 'year' => $sYear,
+									'campus' => $sCampus,
 									'cookies' => $sCookie, 'id' => $COURSE->id ) );
  
 // Form processing and displaying is done here
@@ -250,7 +271,7 @@ if ( $xForm2->is_cancelled() ) {
 
 // This line is to prevent KU Regis bug which requires a section listing
 // before allowing to retrieve student data
-$aRegisSections = regis_get_sec_list( $sCourseID, $sYear, $sSem, $sCookie );
+$aRegisSections = $xKURegis->get_sec_list();
 
 //file_put_contents( '/tmp/moodletxt', var_export( $aRegisSections, true ) . "\n" );
 ku_log( "=== Start on " . $COURSE->shortname . " ===" );
@@ -277,10 +298,9 @@ foreach( $aGroups as $sGroupName ) {
 	}
 	
 	// Retrive data from KU Regis in CSV format
-	$xCsvStdList = regis_get_students( $sCourseID, $sYear,
-									   $sSem, $sLectSec, $sLabSec, $sCookie );
+	$xCsvStdList = $xKURegis->get_students( $sLectSec, $sLabSec );
 	// Extract KU Regis output of a sections to a list of student id
-	$axStudentInSec = csv_to_stdudent_list( $xCsvStdList, 'S' . $sGroupName );
+	$axStudentInSec = csv_to_student_list( $xCsvStdList, 'S' . $sGroupName );
 	
 	// Merge student within a section into the whole course student list.
 	foreach( $axStudentInSec as $sStudentID=>$xStudentData ) {
@@ -298,7 +318,7 @@ foreach( $aGroups as $sGroupName ) {
 }
 
 // We don't need KU Regis now. Log out.
-regis_logout( $sCookie );
+$xKURegis->logout();
 
 // Look up moodle user id for each student. The second parameter means
 // to get the boolean value of the comparison

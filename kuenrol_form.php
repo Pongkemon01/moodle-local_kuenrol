@@ -68,6 +68,7 @@ class local_kuenrol_form1 extends moodleform {
 		$aCampus = array(
 			'B' => get_string( 'f1_bangken', self::$pluginname ),
 			'K' => get_string( 'f1_kumpangsaen', self::$pluginname ),
+			'S' => get_string( 'f1_sakon', self::$pluginname ),
 		);
 		$xForm->addElement( 'select', 'sCampus', get_string( 'f1_campus', self::$pluginname ), $aCampus );
 		$xForm->setDefault( 'sCampus', 'B' );
@@ -92,11 +93,20 @@ class local_kuenrol_form1 extends moodleform {
 			$xForm->setDefault( 'sYear', $aTag['year'][0] );
 		}
 
+		/* Reassign sem code to:
+			0 => Summer
+			1 => First
+			2 => Second
+			3 => Third
+			4 => Summer(Forestry and Vet)
+			5 => Summer 2
+		*/
 		$aSemester = array (
+			0 => get_string( 'f1_sem_summer', self::$pluginname ),
 			1 => get_string( 'f1_sem_first', self::$pluginname ),
 			2 => get_string( 'f1_sem_second', self::$pluginname ),
 			3 => get_string( 'f1_sem_third', self::$pluginname ),
-			4 => get_string( 'f1_sem_summer', self::$pluginname ),
+			4 => get_string( 'f1_sem_summer_fv', self::$pluginname ),
 			5 => get_string( 'f1_sem_summer2', self::$pluginname ),
 		);
 		$xForm->addElement( 'select', 'nSem', get_string( 'f1_semester', self::$pluginname ), $aSemester );
@@ -184,16 +194,18 @@ class local_kuenrol_form2 extends moodleform {
 			'remove' => get_string( 'f2_missing_del', self::$pluginname ),
 		);
 		$xForm->addElement( 'select', 'sDropAction', get_string( 'f2_missingaction', self::$pluginname ), $aDropAction );
-		$xForm->setDefault( 'sDropAction', 'nothing' );
+		$xForm->setDefault( 'sDropAction', 'remove' );
 		if( !( $this->_customdata['candrop'] ) ) {
 			$xForm->updateElementAttr( 'sDropAction', 'disabled' );
 		}
 				
 		$xForm->addElement( 'advcheckbox', 'bAutoGroup', get_string( 'f2_distribute', self::$pluginname ),
 							'', array( 'group' => 1 ), array( false, true ) );
+		$xForm->setDefault( 'bAutoGroup', true );
 
 		$xForm->addElement( 'advcheckbox', 'bAutoRevoke', get_string( 'f2_revoke', self::$pluginname ),
 							'', array( 'group' => 2 ), array( false, true ) );
+		$xForm->setDefault( 'bAutoRevoke', true );
 		
 		// hidden fields
         $xForm->addElement('hidden', 'id');
@@ -203,6 +215,10 @@ class local_kuenrol_form2 extends moodleform {
         $xForm->addElement('hidden', 'cookies');
         $xForm->setType('cookies', PARAM_RAW);
         $xForm->setDefault( 'cookies', $this->_customdata['cookies'] );
+
+        $xForm->addElement('hidden', 'campus');
+        $xForm->setType('campus', PARAM_RAW);
+        $xForm->setDefault( 'campus', $this->_customdata['campus'] );
 
         $xForm->addElement('hidden', 'courseid');
         $xForm->setType('courseid', PARAM_RAW);
