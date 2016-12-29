@@ -343,13 +343,13 @@ function find_students_userid( &$axStudents, $bAutoCreate = false) {
  * @param array $aGroups in the form of Lect:Lab without 'S' prefix (Becareful)
  * @return array of id of the groups that are not in the parameter.
  */
-function get_unlist_groups( $aGroups ) {
+function get_unlist_groups( $aGroups, $sCampus ) {
 	global $COURSE;
 
 	// Generate group name with 'S' prefix
 	$aListedGroups = array();
 	foreach( $aGroups as $sGroupName ) {
-		$aListedGroups[] = 'S' . $sGroupName;
+		$aListedGroups[] = 'S' . $sCampus . $sGroupName;
 	}
 	
 	$xCourseContext = context_course::instance( $COURSE->id );

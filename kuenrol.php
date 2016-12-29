@@ -132,11 +132,25 @@ if( strlen( $sCookie ) == 0 ) {
    		}
 
 		// Create KU Regis instance based on campus
-		if( $sCampus == 'B' || $sCampus == 'K' ) {
-			$xKURegis = new CentralRegis();
-		} else {
-			$xKURegis = new SakonRegis();
+		switch( $sCampus )
+		{
+			case 'B':
+				$xKURegis = new CentralRegis($sCookie);
+				break;
+			case 'K':
+				$xKURegis = new CentralRegis($sCookie);
+				break;
+			case 'S':
+				$xKURegis = new SakonRegis($sCookie);
+				break;
+			case 'R':
+				$xKURegis = new SrirachaRegis($sCookie);
+				break;
+			default:
+				$xKURegis = new CentralRegis($sCookie);
+				break;
 		}
+
 			
 		// Login to KU Regis
 		$sCookie = $xKURegis->login( $xForm1Data->sAccount, $xForm1Data->sPassword, $xForm1Data->sCampus );
@@ -180,10 +194,23 @@ if( strlen( $sCookie ) == 0 ) {
 	   	}while( strlen( $sYear ) < 2 );
    	}
 	// Create KU Regis instance based on campus and previously set cookies
-	if( $sCampus == 'B' || $sCampus == 'K' ) {
-		$xKURegis = new CentralRegis($sCookie);
-	} else {
-		$xKURegis = new SakonRegis($sCookie);
+	switch( $sCampus )
+	{
+		case 'B':
+			$xKURegis = new CentralRegis($sCookie);
+			break;
+		case 'K':
+			$xKURegis = new CentralRegis($sCookie);
+			break;
+		case 'S':
+			$xKURegis = new SakonRegis($sCookie);
+			break;
+		case 'R':
+			$xKURegis = new SrirachaRegis($sCookie);
+			break;
+		default:
+			$xKURegis = new CentralRegis($sCookie);
+			break;
 	}
 
 	// Get section list in the course
@@ -300,7 +327,7 @@ foreach( $aGroups as $sGroupName ) {
 	// Retrive data from KU Regis in CSV format
 	$xCsvStdList = $xKURegis->get_students( $sLectSec, $sLabSec );
 	// Extract KU Regis output of a sections to a list of student id
-	$axStudentInSec = csv_to_student_list( $xCsvStdList, 'S' . $sGroupName );
+	$axStudentInSec = csv_to_student_list( $xCsvStdList, 'S' . $sCampus . $sGroupName );
 	
 	// Merge student within a section into the whole course student list.
 	foreach( $axStudentInSec as $sStudentID=>$xStudentData ) {
@@ -325,7 +352,7 @@ $xKURegis->logout();
 find_students_userid( $axStudents, ( $nRoleID > 0 ) );
 
 // Retrieve unselected groups in the course. These groups will be untouched.
-$aUnlistedGroupIDs = get_unlist_groups( $aGroups );
+$aUnlistedGroupIDs = get_unlist_groups( $aGroups, $sCampus );
 
 // Perform enrollment level action
 if (($xManualEnrollInstance != null || $xSelfEnrollInstance != null) && ($nRoleID > 0 || $sDropAction != 'nothing')) {
