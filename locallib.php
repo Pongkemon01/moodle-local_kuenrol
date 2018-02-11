@@ -201,9 +201,10 @@ function csv_to_student_list( $sCsvStream, $sSecName )
 		   2 => student id
 		   3 => student fullname (in Thai)
 		   4 => student major id
-		   5 => student status ("W" = withdrew, "" = enrolled)
+		   5 => registration type ("C" = Credit, "A" = Audit)
+		   6 => student status ("W" = withdrew, "" = enrolled)
 		*/
-		if( strlen( $asStdRawData[5] ) == 0 ) {
+		if( strlen( $asStdRawData[6] ) == 0 ) {
 			$xStudent = new stdClass();
 			$xStudent->nId = false; // Dummy data for future
 			
