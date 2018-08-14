@@ -42,6 +42,7 @@ require_once('kuregis.php');
 function ku_log( $string )
 {
 		file_put_contents("Kuenrol.log",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
+		file_put_contents("/dev/stderr",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
 }
 /*------------------------------------------------------------*/
 
@@ -201,7 +202,7 @@ function csv_to_student_list( $sCsvStream, $sSecName )
 		   2 => student id
 		   3 => student fullname (in Thai)
 		   4 => student major id
-		   5 => registration type ("C" = Credit, "A" = Audit)
+		   5 => registration type ("C" or "A" for Credit or Audit)
 		   6 => student status ("W" = withdrew, "" = enrolled)
 		*/
 		if( strlen( $asStdRawData[6] ) == 0 ) {

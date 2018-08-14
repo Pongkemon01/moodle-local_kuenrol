@@ -68,8 +68,8 @@ class local_kuenrol_form1 extends moodleform {
 		$aCampus = array(
 			'B' => get_string( 'f1_bangken', self::$pluginname ),
 			'K' => get_string( 'f1_kumpangsaen', self::$pluginname ),
-			'S' => get_string( 'f1_sakon', self::$pluginname ),
 			'R' => get_string( 'f1_sriracha', self::$pluginname ),
+			'S' => get_string( 'f1_sakon', self::$pluginname ),
 		);
 		$xForm->addElement( 'select', 'sCampus', get_string( 'f1_campus', self::$pluginname ), $aCampus );
 		$xForm->setDefault( 'sCampus', 'B' );

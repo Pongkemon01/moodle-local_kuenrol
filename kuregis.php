@@ -26,6 +26,7 @@
  *				into a class. Also, support for Sakonnakon is added.
  */
 
+require_once("$CFG->dirroot/local/kuenrol/locallib.php");
 abstract class KuRegis
 {
 	/* Properties */
@@ -364,10 +365,9 @@ class CentralRegis extends KuRegis
 		}
 	
 		$sec_rows = $sec_table->childNodes;
-	
 		/* Section list starts from row 1 (counting from 0 ) */
 		$sec_array = array();
-		for( $i = 1; $i < $sec_rows->length; $i++ )
+		for( $i = 2; $i < $sec_rows->length; $i++ )
 		{
 			if( $sec_rows->item( $i )->hasChildNodes() )
 			{
@@ -422,7 +422,6 @@ class CentralRegis extends KuRegis
 
 		$csv_url = sprintf( 'https://regis.ku.ac.th/grade/download_file/class_%s_%s%s.txt',
 							$this->sCourseID, $this->sAcademicYear, $this->sSemesterCode);
-
 		/* Initialize curl */
 		$ch = curl_init();
 
@@ -528,7 +527,7 @@ class SakonRegis extends KuRegis
 		/* ---- Step 1: Retrieve section list as an HTML document from Regis --- */
 		$req_opt = sprintf( 'tSearch=%s&rSearch=code&year=25%s&sem=%s&submit=ค้นหา',
 							 $this->sCourseID, $this->sAcademicYear, $this->sSemesterCode );
-		$main_url = 'https://misreg.csc.ku.ac.th/ku8/index.php?';
+		$main_url = 'https://misreg.csc.ku.ac.th/misreg/ku8/index.php?';
 		$trig_url =  $main_url . $req_opt;
 
 		/* Initialize curl */
@@ -718,7 +717,7 @@ print( "\n" );
 		}
 		$req_opt = sprintf( 'cs_code=%s&section=%s&yr=%s&sm=%s&year=%s',
 							 $this->sCourseID, $grp, $this->sAcademicYear, $this->sSemesterCode, $sYr );
-		$main_url = 'https://misreg.csc.ku.ac.th/ku8/show.php?';
+		$main_url = 'https://misreg.csc.ku.ac.th/misreg/ku8/show.php?';
 		$trig_url =  $main_url . $req_opt;
 
 		/* Initialize curl */
@@ -753,14 +752,13 @@ print( "\n" );
 		$result = str_replace("tis-620", 'UTF-8', $result); // Change charset to UTF8
 		$result_utf8 = str_replace("\xA7\xB4\xE0\xC3\xD5\xC2\xB9", 'W', $result); // remove งดเรียน
 		/* KU-Regis gives ISO8859-11-encodeded text, so convert it to utf8 */
-		//$result_utf8 = parent::iso8859_11toUTF8( $result );
+		$result_utf8 = parent::iso8859_11toUTF8( $result_utf8 );
 		/* Check for <title>404 Not Found</title> for unknown course */
 		if( false !== strpos( $result_utf8, '<title>404 Not Found</title>' ) ) {
 			return( '' );
 		}
 	
 		/* --- Step 2: Parse retrieved HTML document for the student list --- */
-
 		$sDrop = parent::iso8859_11toUTF8( 'งดเรียน' );
 		/* Store HTML document in DOM */
 		$dom = new DOMDocument;
@@ -769,8 +767,8 @@ print( "\n" );
 		$tables = $dom->getElementsByTagName( 'table' );
 
 		/* This part is a dirty hard-code. We assume that there must be
-		only 1 <table>-tags. */
-		$std_table = $tables->item( 0 );
+		only 2 <table>-tags. */
+		$std_table = $tables->item( 1 );
 	
 		/* The $sec_table must be a valid DOM object, aka. a valid set of table rows. */
 		if( !is_object( $std_table ) ) {
@@ -778,21 +776,6 @@ print( "\n" );
 		}
 	
 		$std_rows = $std_table->childNodes;
-
-/*
-print( "--------\n");
-print_r( $std_rows->length );
-print( "\n" );
-for( $j = 0; $j < $std_rows->length; $j++ )
-{
-print( '==>' . strval( $j) . "\n");
-print_r( $std_rows->item($j) );
-print( "\n" );
-}
-print( "\n" );
-*/
-
-		/* Student list starts from row 1 (counting from 0 ) */
 		$sStudentCSV = '';
 		for( $i = 1; $i < $std_rows->length; $i++ )
 		{
@@ -808,24 +791,13 @@ print( "\n" );
 					continue;
 				}
 				
-/*
-print( "--------\n");
-print_r( $std_items->length );
-print( "\n" );
-for( $j = 0; $j < $std_items->length; $j++ )
-{
-print( '==>' . strval( $j) . "\n");
-print_r( $std_items->item($j) );
-print( "\n" );
-}
-print( "\n" );
-*/
 				// Extract information and link them in Regis CSV format
 				$sCSVLine = $std_items->item( 0 )->nodeValue . ','; // Index
 				$sCSVLine = $sCSVLine . $this->sCourseID . ','; // Course id
 				$sCSVLine = $sCSVLine . $std_items->item( 1 )->nodeValue . ','; // Student ID
 				$sCSVLine = $sCSVLine . $std_items->item( 2 )->nodeValue . ','; // Student name
 				$sCSVLine = $sCSVLine . $std_items->item( 3 )->nodeValue . ','; // Major ID
+				$sCSVLine = $sCSVLine . ','; // Dummy field used to indicate enrolment type in Bangkhen
 
 				/* Adjust enrollment status */
 				$aStdStat = explode( ' ', $std_items->item( 6 )->nodeValue );
@@ -926,16 +898,18 @@ class SrirachaRegis extends KuRegis
 		} 
 		catch (PDOException $e)
 		{
-			echo 'Connection to Sriracha failed: ' . $e->getMessage();
+			print_error( 'Connection to Sriracha failed: ' . $e->getMessage() );
 			return( array() );
 		}
+		/* Select database */
+		$xDBConn->exec( "use transcripts" );
 
 		/* Prepare parameter */
 		$sCond = "CS_CODE='" . $this->sCourseID . "' and SM_YR='" . $this->sAcademicYear . "' and SM_SEM='" . $this->sSemesterCode . "'";
 		
 		/* Get data */
-		$xRegisData = $xDBConn->query( "select distinct lc_section, lb_section from register_01999111 where " . $sCond );
-		
+		$xRegisData = $xDBConn->query( "select distinct lc_section, lb_section from [transcripts].dbo.[register_01999111] where " . $sCond );
+
 		/* Parse data */
 		$sec_array = array();		
 		foreach( $xRegisData as $xRow )
@@ -958,7 +932,8 @@ class SrirachaRegis extends KuRegis
 	   2 => student id
 	   3 => student fullname (in Thai)
 	   4 => student major id
-	   5 => student status ("W" = withdrew, "" = enrolled)
+	   5 => dummy ( used by Bangkhen );
+	   6 => student status ("W" = withdrew, "" = enrolled)
 
 	CAUTION: We require to use RegisGetSecList of the same course in the same
 	semester and academic year before using this function. Otherwise, the KU Regis
@@ -990,16 +965,15 @@ class SrirachaRegis extends KuRegis
 		} 
 		catch (PDOException $e)
 		{
-			echo 'Connection to Sriracha failed: ' . $e->getMessage();
+			print 'Connection to Sriracha failed: ' . $e->getMessage();
 			return( array() );
 		}
 
 		/* Prepare parameter */
 		$sCond = "CS_CODE='" . $this->sCourseID . "' and SM_YR='" . $this->sAcademicYear . "' and SM_SEM='" . $this->sSemesterCode . "'";
 		$sCond = $sCond . " and LC_SECTION='" . $grp_lect . "' and LB_SECTION='" .  $grp_lab . "'";
-		$sSql = "select distinct cs_code, std_id, name, major, attr from register_01999111 where " . $sCond;
+		$sSql = "select distinct cs_code, std_id, name, major, attr from [transcripts].dbo.[register_01999111] where " . $sCond;
 		
-//		echo( $sSql );
 		/* Get data */
 		$xRegisData = $xDBConn->query( $sSql );
 		
@@ -1013,8 +987,9 @@ class SrirachaRegis extends KuRegis
 			$sCSVLine = strval( $nCount ) . ','; // Index
 			$sCSVLine = $sCSVLine . $xRow[ "cs_code" ] . ','; // Course id
 			$sCSVLine = $sCSVLine . $xRow[ "std_id" ] . ','; // Student ID
-			$sCSVLine = $sCSVLine . $xRow[ "name" ] . ','; // Student name
+			$sCSVLine = $sCSVLine . parent::iso8859_11toUTF8( $xRow[ "name" ] ) . ','; // Student name
 			$sCSVLine = $sCSVLine . $xRow[ "major" ] . ','; // Major ID
+			$sCSVLine = $sCSVLine . ','; // Dummy
 			
 			/* Adjust enrollment status */
 			$sAttr = $xRow[ "attr" ];
@@ -1023,10 +998,6 @@ class SrirachaRegis extends KuRegis
 				$sCSVLine = $sCSVLine . 'W';
 			}
 			
-			print_r( $xRow );
-			print("\n");
-			//print( "Current Name = " . $xRow[ "name"]  . " with length = " . strval( strlen( $xRow[ "name" ] ) ) . "\n" );
-
 			$sCSVLine = $sCSVLine . "\n";
 			
 			/* Combine items into a line of CSV */
