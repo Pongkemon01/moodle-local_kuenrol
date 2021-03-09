@@ -44,6 +44,10 @@ function ku_log( $string )
 		file_put_contents("Kuenrol.log",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
 		file_put_contents("/dev/stderr",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
 }
+function debug_log( $string )
+{
+		file_put_contents("Debug.log",  date('l j F Y H:i:s') . " : " . $string . "\n", FILE_APPEND );
+}
 /*------------------------------------------------------------*/
 
 function csv_to_array( $string )
@@ -343,15 +347,19 @@ function find_students_userid( &$axStudents, $bAutoCreate = false) {
  * Retrieve the names of unselected groups in the course. All students belong to
  * these groups will be untouched.
  * @param array $aGroups in the form of Lect:Lab without 'S' prefix (Becareful)
+ * @param $bIncludeOld to include students from old course plan.
  * @return array of id of the groups that are not in the parameter.
  */
-function get_unlist_groups( $aGroups, $sCampus ) {
+function get_unlist_groups( $aGroups, $sCampus, $bIncludeOld ) {
 	global $COURSE;
 
 	// Generate group name with 'S' prefix
 	$aListedGroups = array();
 	foreach( $aGroups as $sGroupName ) {
 		$aListedGroups[] = 'S' . $sCampus . $sGroupName;
+		if( $bIncludeOld ) {
+			$aListedGroups[] = 'S' . $sCampus . '_o' . $sGroupName;
+		}
 	}
 	
 	$xCourseContext = context_course::instance( $COURSE->id );
@@ -539,6 +547,76 @@ if( $bStatus ) {
 }
 /*------------------------------------------------------------*/
 
+/**
+ * Perform retrieving all students of a specific course id.
+ * @param object $xKURegis pointed to active Regis platform
+ * @param string $courseid
+ * @param int $year - last 2 digits of B.E.
+ * @param int $semester - 0 = Summer, 1 = First, 2 = Second, 3 = Third
+ * @param array $aGroups for each group to include
+ * @param array $axStudents to append the data to.
+ * @return array of the information of all student within the course.
+ */
+function get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $axStudents ) {
+	
+	// Get section list in the course
+	$xKURegis->set_active_course( $sCourseID, $sYear, $sSem );
+	$aRegisSections = $xKURegis->get_sec_list();
+
+	//file_put_contents( '/tmp/moodletxt', var_export( $aRegisSections, true ) . "\n" );
+	ku_log( "=== Start on " . $COURSE->shortname . " ===" );
+
+	// Build data for enrollment and group-switch action. Both acctions can accept
+	// either username (Nontri account) or idnumer as the key.
+	//$aStdIDList = array();
+	//$aStdIDGroupList = array();
+	foreach( $aGroups as $sGroupName ) {
+		// Split group name into lecture and lab section id.
+		$aGroupPair = explode( ':', $sGroupName );
+
+		if( isset( $aGroupPair[0] ) ) {
+			$sLectSec = $aGroupPair[0];
+		} else {
+			$sLectSec = 0;
+		}
+
+		if( isset( $aGroupPair[1] ) ) {
+			$sLabSec = $aGroupPair[1];
+		} else {
+			$sLabSec = 0;
+		}
+	
+		// Retrive data from KU Regis in CSV format
+		$xCsvStdList = $xKURegis->get_students( $sLectSec, $sLabSec );
+		// Extract KU Regis output of a sections to a list of student id
+		// Check whether this sCourseID indicates the course in old course plan
+		// and set the group suffix according to its value
+		if( $sCourseID{0} == '9' ) {
+			$axStudentInSec = csv_to_student_list( $xCsvStdList, 'S' . $sCampus . '_o' . $sGroupName );
+		} else {
+			$axStudentInSec = csv_to_student_list( $xCsvStdList, 'S' . $sCampus . $sGroupName );
+		}
+	
+		// Merge student within a section into the whole course student list.
+		foreach( $axStudentInSec as $sStudentID=>$xStudentData ) {
+			if( array_key_exists( $sStudentID, $axStudents ) ) {
+				// The student already exist then add his/her section into the list
+				$axStudents[ $sStudentID ]->asGroupList[] = array_merge( 
+					$axStudents[ $sStudentID ]->asGroupList, $xStudentData->asGroupList );
+			} else {
+				// The student does not exist yet so we add the new record
+				// A new student is always create by "new stdClass()" so we don't
+				// need to worry about deep copy here
+				$axStudents[ $sStudentID ] = $xStudentData;
+			}
+		}
+	}
+	
+	return( $axStudents );
+}
+
+
+/*------------------------------------------------------------*/
 
 //$tag = 'id=01204224;year=57;sem=2;sec=0:11,0:12';
 //$expTag = explode_tag( $tag );

@@ -277,6 +277,7 @@ if ( $xForm2->is_cancelled() ) {
 	$nRoleID = intval( $xForm2Data->nRoleID ); // Role-id = 0 means no enrollment
 	$bAutoGroup = $xForm2Data->bAutoGroup;
 	$bAutoRevoke = $xForm2Data->bAutoRevoke;
+	$bIncludeOld = $xForm2Data->bIncludeOld;
 	
 	// Preparation completed. Continue to process the data
 	
@@ -295,53 +296,11 @@ if ( $xForm2->is_cancelled() ) {
 /********************** Step 5: Processing ************************/
 
 // Process based on section
-
-// This line is to prevent KU Regis bug which requires a section listing
-// before allowing to retrieve student data
-$aRegisSections = $xKURegis->get_sec_list();
-
-//file_put_contents( '/tmp/moodletxt', var_export( $aRegisSections, true ) . "\n" );
-ku_log( "=== Start on " . $COURSE->shortname . " ===" );
-
-// Build data for enrollment and group-switch action. Both acctions can accept
-// either username (Nontri account) or idnumer as the key.
-//$aStdIDList = array();
-//$aStdIDGroupList = array();
-$axStudents = array();	// Array of all students in the course
-foreach( $aGroups as $sGroupName ) {
-	// Split group name into lecture and lab section id.
-	$aGroupPair = explode( ':', $sGroupName );
-
-	if( isset( $aGroupPair[0] ) ) {
-		$sLectSec = $aGroupPair[0];
-	} else {
-		$sLectSec = 0;
-	}
-
-	if( isset( $aGroupPair[1] ) ) {
-		$sLabSec = $aGroupPair[1];
-	} else {
-		$sLabSec = 0;
-	}
-	
-	// Retrive data from KU Regis in CSV format
-	$xCsvStdList = $xKURegis->get_students( $sLectSec, $sLabSec );
-	// Extract KU Regis output of a sections to a list of student id
-	$axStudentInSec = csv_to_student_list( $xCsvStdList, 'S' . $sCampus . $sGroupName );
-	
-	// Merge student within a section into the whole course student list.
-	foreach( $axStudentInSec as $sStudentID=>$xStudentData ) {
-		if( array_key_exists( $sStudentID, $axStudents ) ) {
-			// The student already exist then add his/her section into the list
-			$axStudents[ $sStudentID ]->asGroupList[] = array_merge( 
-				$axStudents[ $sStudentID ]->asGroupList, $xStudentData->asGroupList );
-		} else {
-			// The student does not exist yet so we add the new record
-			// A new student is always create by "new stdClass()" so we don't
-			// need to worry about deep copy here
-			$axStudents[ $sStudentID ] = $xStudentData;
-		}
-	}
+$axStudents = array();
+$axStudents = get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $axStudents );
+if( $bIncludeOld ) {
+	$sCourseID{0} = '9';
+	$axStudents = get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $axStudents );
 }
 
 // We don't need KU Regis now. Log out.
@@ -352,7 +311,7 @@ $xKURegis->logout();
 find_students_userid( $axStudents, ( $nRoleID > 0 ) );
 
 // Retrieve unselected groups in the course. These groups will be untouched.
-$aUnlistedGroupIDs = get_unlist_groups( $aGroups, $sCampus );
+$aUnlistedGroupIDs = get_unlist_groups( $aGroups, $sCampus, $bIncludeOld );
 
 // Perform enrollment level action
 if (($xManualEnrollInstance != null || $xSelfEnrollInstance != null) && ($nRoleID > 0 || $sDropAction != 'nothing')) {

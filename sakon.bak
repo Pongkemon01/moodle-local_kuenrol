@@ -1,0 +1,330 @@
+<html>
+<head>
+<TITLE>รายงานจำนวนนิสิตลงทะเบียน</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=tis-620">
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<link rel="stylesheet" href="css.css" type="text/css" media="screen">
+</head>
+<body onload="javascript:getValue();">
+	<div id="myHead">
+		รายงานจำนวนนิสิตลงทะเบียน
+	</div>
+	
+	<form name="formSearch" method="get" action="index.php">
+	<p style="color:black;">
+	<TABLE style="width:100%;">
+		<TD style="text-align:right;width:40%;">
+		<input type="text" id="txtSearch" style="width:120px;font-size:1em;font-weight:bold;text-align:center;" value="ค้นหาข้อมูล :" disabled /></TD>
+		<TD style="text-align:left;width:60%;">
+		<input type="text" id="tSearch" name="tSearch" value="01999111" style="width:350px;font-size:1em;" /> ตย. 01355175, 01999012 หรือ อังกฤษ , ฟุตบอล <!--ฟุตบอล -->
+		<input type="hidden" id="rSearch" name="rSearch" value="code" CHECKED />
+		
+		</TD></TR>
+
+	<TR>
+          <TD style="text-align:right; vertical-align:top;">ปีการศึกษา :</TD>
+          <TD style="text-align:left;"><input type="text" name="year" maxlength="4" value="2562" style="width:150px;font-size:1em;"> ตย. 2555, 2556 เป็นต้น</TD>
+		</TR>
+
+		<TR>
+          <TD style="text-align:right; vertical-align:top;">ภาค : </TD>
+          <TD style="text-align:left;">
+			<select  id="sem" name="sem"  width="100px" style="width:100px;">
+				<option value="1"   selected="selected" > ต้น </option>
+				<option value="2"     > ปลาย </option>
+				<option value="0"   > ฤดูร้อน </option>
+				<option value="5"   > ฤดูร้อน(2) </option>
+				<option value="3"  > ที่ 3 </option>
+			</select>
+			</TD>
+		</TR>
+		
+		<TD colspan="2"><center><input type="submit" name="submit" value="ค้นหา"  style="width:100px;" onclick="getValue()"></center></TD></TR>
+	</TABLE>
+	
+	<center><font color=green>* สามารถคลิ๊กที่รหัสหรือชื่อวิชา เพื่อดูรายชื่อนิสิตทั้งหมด*</font></center>
+	</p>
+	
+<div id="loadTag" style="font-weight: bolder; 	text-align:center; color: #0033CC; background:url('loading2.gif') no-repeat center;">
+</div>
+</form>
+
+<div id="ListBox">
+</div>
+
+
+<TABLE WIDTH="100%"  BORDER="1" style="font: 20px;font-weight: bolder; ">
+	<TR style="background:#F2F5A9">
+		<TH WIDTH='5%'>ที่</TH>
+		<TH WIDTH='15%'>รหัส</TH>
+		<TH WIDTH='50%'>ชื่อวิชา</TH>
+		<TH WIDTH='10%'>หมู่เรียน</TH>
+		<TH WIDTH='10%'>จำนวนทั้งหมด</TH>
+		<TH WIDTH='10%'>จำนวนนิสิต</TH>
+	</TR>
+	
+<center><H3>รายงานจำนวนนิสิตลงทะเบียน ภาคต้น ปีการศึกษา 2562</H3></center>
+		<tr>
+			<td style="text-align:center;">1</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=1&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=1&yr=62&sm=1&section=1&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">1</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>35</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">2</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=2&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=2&yr=62&sm=1&section=2&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">2</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>20</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">3</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=3&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=3&yr=62&sm=1&section=3&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">3</td>
+			<td style="text-align:center;">120</td>
+			<td style="text-align:center;"><font color=#0000FF><B>37</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">4</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=4&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=4&yr=62&sm=1&section=4&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">4</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>29</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">5</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=5&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=5&yr=62&sm=1&section=5&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">5</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>42</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">6</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=6&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=6&yr=62&sm=1&section=6&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">6</td>
+			<td style="text-align:center;">85</td>
+			<td style="text-align:center;"><font color=#0000FF><B>57</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">7</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=7&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=7&yr=62&sm=1&section=7&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">7</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>53</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">8</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=8&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=8&yr=62&sm=1&section=8&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">8</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>51</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;color:#008A00; font-style:normal;">9</td>
+						<td style="text-align:center;color:#008A00; font-style:normal;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=9&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;color:#008A00; font-style:normal;"><a href="show.php?cs_code=01999111&section=9&yr=62&sm=1&section=9&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;"><font color=#008A00><B> ศาสตร์แห่งแผ่นดิน (58) (เปิดใหม่)</B></font></a></td>
+						<td style="text-align:center;color:#008A00; font-style:normal;">9</td>
+			<td style="text-align:center;color:#008A00; font-style:normal;">100</td>
+			<td style="text-align:center;color:#008A00; font-style:normal;"><font color=#0000FF><B>87</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;color:#008A00; font-style:normal;">10</td>
+						<td style="text-align:center;color:#008A00; font-style:normal;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=10&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;color:#008A00; font-style:normal;"><a href="show.php?cs_code=01999111&section=10&yr=62&sm=1&section=10&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;"><font color=#008A00><B> ศาสตร์แห่งแผ่นดิน (58) (เปิดใหม่)</B></font></a></td>
+						<td style="text-align:center;color:#008A00; font-style:normal;">10</td>
+			<td style="text-align:center;color:#008A00; font-style:normal;">80</td>
+			<td style="text-align:center;color:#008A00; font-style:normal;"><font color=#0000FF><B>51</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">11</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=11&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=11&yr=62&sm=1&section=11&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">11</td>
+			<td style="text-align:center;">50</td>
+			<td style="text-align:center;"><font color=#0000FF><B>21</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">12</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=12&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=12&yr=62&sm=1&section=12&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">12</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>31</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">13</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=13&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=13&yr=62&sm=1&section=13&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">13</td>
+			<td style="text-align:center;">50</td>
+			<td style="text-align:center;"><font color=#0000FF><B>34</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">14</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=14&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=14&yr=62&sm=1&section=14&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">14</td>
+			<td style="text-align:center;">70</td>
+			<td style="text-align:center;"><font color=#0000FF><B>44</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">15</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=15&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=15&yr=62&sm=1&section=15&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">15</td>
+			<td style="text-align:center;">30</td>
+			<td style="text-align:center;"><font color=#0000FF><B>26</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">16</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=16&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=16&yr=62&sm=1&section=16&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">16</td>
+			<td style="text-align:center;">30</td>
+			<td style="text-align:center;"><font color=#0000FF><B>26</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">17</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=17&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=17&yr=62&sm=1&section=17&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">17</td>
+			<td style="text-align:center;">30</td>
+			<td style="text-align:center;"><font color=#0000FF><B>26</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">18</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=18&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=18&yr=62&sm=1&section=18&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">18</td>
+			<td style="text-align:center;">30</td>
+			<td style="text-align:center;"><font color=#0000FF><B>29</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">19</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=19&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=19&yr=62&sm=1&section=19&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">19</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>41</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">20</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=20&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=20&yr=62&sm=1&section=20&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">20</td>
+			<td style="text-align:center;">80</td>
+			<td style="text-align:center;"><font color=#0000FF><B>71</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">21</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=21&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=21&yr=62&sm=1&section=21&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">21</td>
+			<td style="text-align:center;">70</td>
+			<td style="text-align:center;"><font color=#0000FF><B>66</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">22</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=22&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=22&yr=62&sm=1&section=22&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">22</td>
+			<td style="text-align:center;">70</td>
+			<td style="text-align:center;"><font color=#0000FF><B>67</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">23</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=23&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=23&yr=62&sm=1&section=23&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">23</td>
+			<td style="text-align:center;">50</td>
+			<td style="text-align:center;"><font color=#0000FF><B>10</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">24</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=24&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=24&yr=62&sm=1&section=24&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">24</td>
+			<td style="text-align:center;">50</td>
+			<td style="text-align:center;"><font color=#FF0000>** <B>58</B> **</font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">25</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=25&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=25&yr=62&sm=1&section=25&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">25</td>
+			<td style="text-align:center;">50</td>
+			<td style="text-align:center;">0</td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">26</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=26&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=26&yr=62&sm=1&section=26&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">26</td>
+			<td style="text-align:center;">80</td>
+			<td style="text-align:center;"><font color=#0000FF><B>75</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">27</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=27&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=27&yr=62&sm=1&section=27&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">27</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;">0</td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">28</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=28&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=28&yr=62&sm=1&section=28&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">28</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>53</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">29</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=29&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=29&yr=62&sm=1&section=29&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">29</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>35</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">30</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=30&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=30&yr=62&sm=1&section=30&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">30</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>51</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;color:#008A00; font-style:normal;">31</td>
+						<td style="text-align:center;color:#008A00; font-style:normal;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=31&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;color:#008A00; font-style:normal;"><a href="show.php?cs_code=01999111&section=31&yr=62&sm=1&section=31&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;"><font color=#008A00><B> ศาสตร์แห่งแผ่นดิน (58) (เปิดใหม่)</B></font></a></td>
+						<td style="text-align:center;color:#008A00; font-style:normal;">31</td>
+			<td style="text-align:center;color:#008A00; font-style:normal;">50</td>
+			<td style="text-align:center;color:#008A00; font-style:normal;"><font color=#0000FF><B>28</B></font></td>
+		</tr>
+				<tr>
+			<td style="text-align:center;">32</td>
+						<td style="text-align:center;"><a href="show.php?cs_code=01999111&yr=62&sm=1&section=33&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">01999111</a></td>
+			<td style="text-align:left;"><a href="show.php?cs_code=01999111&section=33&yr=62&sm=1&section=33&year=58" target="_blank" title="คลิ๊กเพื่อดูรายชื่อนิสิตทั้งหมด"  style="text-decoration : none;">ศาสตร์แห่งแผ่นดิน (58)</a></td>
+						<td style="text-align:center;">33</td>
+			<td style="text-align:center;">60</td>
+			<td style="text-align:center;"><font color=#0000FF><B>23</B></font></td>
+		</tr>
+		</TABLE> 
+
+</body>
+</html>
+<!-- <script type='text/javascript' src='jquery-1.8.2.js'></script>
+<script type='text/javascript' src='getValue.js'></script> -->
+Monday 15 July 2019 10:51:43 : Sakon 0

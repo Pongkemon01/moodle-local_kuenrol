@@ -525,9 +525,9 @@ class SakonRegis extends KuRegis
 		}
 		
 		/* ---- Step 1: Retrieve section list as an HTML document from Regis --- */
-		$req_opt = sprintf( 'tSearch=%s&rSearch=code&year=25%s&sem=%s&submit=ค้นหา',
+		$req_opt = sprintf( '?tSearch=%s&rSearch=code&year=25%s&sem=%s&submit=ค้นหา',
 							 $this->sCourseID, $this->sAcademicYear, $this->sSemesterCode );
-		$main_url = 'https://misreg.csc.ku.ac.th/misreg/ku8/index.php?';
+		$main_url = 'https://misreg.csc.ku.ac.th/misreg/ku8/index.php';
 		$trig_url =  $main_url . $req_opt;
 
 		/* Initialize curl */
@@ -550,7 +550,6 @@ class SakonRegis extends KuRegis
 		curl_close( $ch );
 	
 		/* If http request fail, return empty group array */
-	
 		if( false === $result ) {
 			return( array() );
 		}
@@ -586,6 +585,7 @@ class SakonRegis extends KuRegis
 
 		/* Section list starts from row 1 (counting from 0 ) */
 		$sec_array = array();
+
 		for( $i = 1; $i < $sec_rows->length; $i++ )
 		{
 			if( $sec_rows->item( $i )->hasChildNodes() )
@@ -593,7 +593,7 @@ class SakonRegis extends KuRegis
 				$sec_items = $sec_rows->item( $i )->childNodes;
 
 				// Check for "ไม่พบข้อมูล" which has only 1 item
-				if( $sec_items->length < 4 )
+				if( $sec_items->length < 6 )
 				{
 					// Invalid entry
 					continue;
@@ -616,11 +616,27 @@ print( strlen( $dbg->length ) );
 print( "\n" );
 */
 				// Extract section
-				$sSection = $sec_items->item( 3 )->nodeValue;
+				$sSection = $sec_items->item( 6 )->nodeValue;
+/*
+debug_log("sec_items " . print_r($sec_items, TRUE));
+debug_log(" - item0 " . print_r($sec_items->item(0), TRUE));
+debug_log(" - item1 " . print_r($sec_items->item(1), TRUE));
+debug_log(" - item2 " . print_r($sec_items->item(2), TRUE));
+debug_log(" - item3 " . print_r($sec_items->item(3), TRUE));
+debug_log(" - item4 " . print_r($sec_items->item(4), TRUE));
+debug_log(" - item5 " . print_r($sec_items->item(5), TRUE));
+debug_log(" - item6 " . print_r($sec_items->item(6), TRUE));
+debug_log(" - item7 " . print_r($sec_items->item(7), TRUE));
+debug_log(" - item8 " . print_r($sec_items->item(8), TRUE));
+debug_log(" - item9 " . print_r($sec_items->item(9), TRUE));
+debug_log(" - item10 " . print_r($sec_items->item(10), TRUE));
+debug_log(" - item11 " . print_r($sec_items->item(11), TRUE));
+debug_log(" - item12 " . print_r($sec_items->item(12), TRUE));
 				
+*/
 				// Extract course defined year from course name
 				// It is in the format "nnnn (yr) (mod)". So, we use explode to extract yr
-				$aCourseinfo = explode( "(", $sec_items->item( 2 )->nodeValue );
+				$aCourseinfo = explode( "(", $sec_items->item( 5 )->nodeValue );
 
 				$aTemp = explode( ")", $aCourseinfo[ 1 ] );
 				$sYr = $aTemp[0];

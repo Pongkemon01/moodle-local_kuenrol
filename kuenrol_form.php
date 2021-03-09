@@ -208,6 +208,10 @@ class local_kuenrol_form2 extends moodleform {
 							'', array( 'group' => 2 ), array( false, true ) );
 		$xForm->setDefault( 'bAutoRevoke', true );
 		
+		$xForm->addElement( 'advcheckbox', 'bIncludeOld', 'Include users from previous course plan',
+							'', array( 'group' => 3 ), array( false, true ) );
+		$xForm->setDefault( 'bIncludeOld', true );
+
 		// hidden fields
         $xForm->addElement('hidden', 'id');
         $xForm->setType('id', PARAM_INT);
