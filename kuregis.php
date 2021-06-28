@@ -914,7 +914,7 @@ class SrirachaRegis extends KuRegis
 		} 
 		catch (PDOException $e)
 		{
-			print_error( 'Connection to Sriracha failed: ' . $e->getMessage() );
+			ku_log( 'Connection to Sriracha failed: ' . $e->getMessage() );
 			return( array() );
 		}
 		/* Select database */

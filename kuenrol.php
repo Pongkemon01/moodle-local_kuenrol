@@ -297,10 +297,10 @@ if ( $xForm2->is_cancelled() ) {
 
 // Process based on section
 $axStudents = array();
-$axStudents = get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $axStudents );
+$axStudents = get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $sCampus, $axStudents );
 if( $bIncludeOld ) {
 	$sCourseID{0} = '9';
-	$axStudents = get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $axStudents );
+	$axStudents = get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $sCampus, $axStudents );
 }
 
 // We don't need KU Regis now. Log out.

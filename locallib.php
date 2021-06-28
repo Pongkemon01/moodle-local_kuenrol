@@ -554,10 +554,11 @@ if( $bStatus ) {
  * @param int $year - last 2 digits of B.E.
  * @param int $semester - 0 = Summer, 1 = First, 2 = Second, 3 = Third
  * @param array $aGroups for each group to include
+ * @param string $sCampus - Campus suffix (B = Bangkhen, etc...)
  * @param array $axStudents to append the data to.
  * @return array of the information of all student within the course.
  */
-function get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $axStudents ) {
+function get_students( $xKURegis, $sCourseID, $sYear, $sSem, $aGroups, $sCampus, $axStudents ) {
 	
 	// Get section list in the course
 	$xKURegis->set_active_course( $sCourseID, $sYear, $sSem );
