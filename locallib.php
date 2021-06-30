@@ -143,7 +143,7 @@ function implode_tag( $aTag ) {
 
 /**
  * Checking if the provided user name is (likely) a student.
- * - Students should not be able to edit any grade book.
+ * - Students should not be able to export any grade book.
  * @param integer $nUserId
  * @return bool. (True if the user is likely a student. False otherwise.)
  */
@@ -152,7 +152,7 @@ function is_student( $nUserId ) {
 	
 	$xCourseContext = context_course::instance( $COURSE->id );
 	
-	return( !has_capability( 'moodle/grade:edit', $xCourseContext, $nUserId ) );
+	return( !has_capability( 'moodle/grade:export', $xCourseContext, $nUserId ) );
 }
 /*------------------------------------------------------------*/
 
@@ -262,7 +262,7 @@ ku_log( "Create user : ". $xStudentInfo->sUserName );
 	$xUser->timemodified = time();
 	$xUser->timecreated	 = time();
 	$xUser->suspended = 0;
-	$xUser->auth = 'ldap';
+	$xUser->auth = 'oauth2'; // ldap
 	$xUser->lang = '';
 	$xUser->password = AUTH_PASSWORD_NOT_CACHED;
 	
