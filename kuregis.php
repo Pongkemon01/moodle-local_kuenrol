@@ -1003,7 +1003,8 @@ class SrirachaRegis extends KuRegis
 			$sCSVLine = strval( $nCount ) . ','; // Index
 			$sCSVLine = $sCSVLine . $xRow[ "cs_code" ] . ','; // Course id
 			$sCSVLine = $sCSVLine . $xRow[ "std_id" ] . ','; // Student ID
-			$sCSVLine = $sCSVLine . parent::iso8859_11toUTF8( $xRow[ "name" ] ) . ','; // Student name
+			//$sCSVLine = $sCSVLine . parent::iso8859_11toUTF8( $xRow[ "name" ] ) . ','; // Student name
+			$sCSVLine = $sCSVLine . $xRow[ "name" ] . ','; // Student name
 			$sCSVLine = $sCSVLine . $xRow[ "major" ] . ','; // Major ID
 			$sCSVLine = $sCSVLine . ','; // Dummy
 			

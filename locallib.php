@@ -186,6 +186,76 @@ function ku_gen_username( $sStudentID ) {
 /*------------------------------------------------------------*/
 
 /**
+ * Returns a Google email of the provided Nontri account
+ *
+ * @param string $sNontriAcc - A valid Nontri account.
+ * @return string|bool - The coresponding Google email if found, Nontri email otherwise.
+ **/
+function ku_get_google( $sNontriAcc ) {
+	/* The Google mail of a Nontri can be retrieved from 
+	   https://hr.ku.ac.th/cpcsnss/itsupport/json_account.php
+	   which accepts a query as JSON format and returns also
+	   in JSON. The query JSON contains only 1 field as
+	    "account" : "Nontri Acc"
+	   the response JSON has relevant field as:
+	     - "google-mail" - @ku.th
+		 - "office365-mail" - @live.ku.th
+		 - "ku_mail" - Nontri account
+	*/
+	$sJsonServer = 'https://hr.ku.ac.th/cpcsnss/itsupport/json_account.php';
+	$sDefaultAnswer = $sNontriAcc . '@ku.ac.th';
+	$sQueryString = '{"account" : "' . $sNontriAcc . '"}';
+
+	/* Get the information through CURL library */
+	/* Initialize curl */
+	$ch = curl_init();
+	
+	/* Set URL */
+	curl_setopt( $ch, CURLOPT_URL, $sJsonServer );
+	curl_setopt( $ch, CURLOPT_REFERER, 'https://edufarm.ku.ac.th' );
+	
+	/* Disable verifying server SSL certificate */
+	curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+	
+	/* Get all html result into a variable for parsing cookies */
+	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+	
+	/* Set query */
+	curl_setopt( $ch, CURLOPT_POST, true );
+	curl_setopt( $ch, CURLOPT_POSTFIELDS, $sQueryString );
+
+	/* Execute URL request */
+	$result = curl_exec( $ch );
+
+	/* Close curl */
+	curl_close( $ch );
+	
+	/* If http request fail, return empty group array */
+	
+	if( false === $result ) {
+		return( $sDefaultAnswer );
+	}
+	
+	/* Parsing the result. We avoid JSON library as we are not sure
+	   wheter the system has JSON installed.
+	*/
+	$sJson = trim( $result, ' \n\r\t\v\0{}' ); 	// Trim all spaces and brackets.
+	$sJsonRecords = expolde( ',', $sJson );		// Separate each records
+
+	/* Search for the "google-mail" field */
+	$sFinalAnswer = $sDefaultAnswer;
+	foreach( $sJsonRecords as $sJsonLine ) {
+		$sJsonFields = explode( ':' , $sJsonLine );
+		if( trim( $sJsonFields[0] ) == '"google-mail"' ) {
+			$sFinalAnswer = trim( $sJsonFields[1], ' \n\r\t\v\0"' ); 	// Trim all spaces and quotes.
+		}
+	}
+
+	return( $sFinalAnswer );
+}
+/*------------------------------------------------------------*/
+
+/**
  * This function translates CSV data into an array of objects representing
  * students who currently enrolled to the class. Its operation is very
  * hard coded according to KU Regis format.
@@ -253,7 +323,7 @@ ku_log( "Create user : ". $xStudentInfo->sUserName );
 	$xUser->username = $xStudentInfo->sUserName;
 	$xUser->firstname = $xStudentInfo->sFirstName;
 	$xUser->lastname = $xStudentInfo->sLastName;
-	$xUser->email = $xStudentInfo->sUserName . '@ku.ac.th';
+	$xUser->email = ku_get_google( $xStudentInfo->sUserName );
 	$xUser->idnumber = $xStudentInfo->sStudentID;
 	
 	// Setting remaining fields with default values
@@ -262,7 +332,7 @@ ku_log( "Create user : ". $xStudentInfo->sUserName );
 	$xUser->timemodified = time();
 	$xUser->timecreated	 = time();
 	$xUser->suspended = 0;
-	$xUser->auth = 'oauth2'; // ldap
+	$xUser->auth = 'oauth2'; // ldap or oauth2
 	$xUser->lang = '';
 	$xUser->password = AUTH_PASSWORD_NOT_CACHED;
 	
