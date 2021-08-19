@@ -240,13 +240,13 @@ function ku_get_google( $sNontriAcc ) {
 	   wheter the system has JSON installed.
 	*/
 	$sJson = trim( $result, ' \n\r\t\v\0{}' ); 	// Trim all spaces and brackets.
-	$sJsonRecords = expolde( ',', $sJson );		// Separate each records
+	$sJsonRecords = explode( ',', $sJson );		// Separate each records
 
 	/* Search for the "google-mail" field */
 	$sFinalAnswer = $sDefaultAnswer;
 	foreach( $sJsonRecords as $sJsonLine ) {
 		$sJsonFields = explode( ':' , $sJsonLine );
-		if( trim( $sJsonFields[0] ) == '"google-mail"' ) {
+		if( trim( $sJsonFields[0] ) == '"google_mail"' ) {
 			$sFinalAnswer = trim( $sJsonFields[1], ' \n\r\t\v\0"' ); 	// Trim all spaces and quotes.
 		}
 	}
